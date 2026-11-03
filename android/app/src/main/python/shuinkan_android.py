@@ -26,6 +26,17 @@ def _log(msg):
     print(f"shuinkan-start: {msg}", flush=True)  # shows up in logcat as python.stdout
 
 
+def _versions():
+    import importlib
+    out = []
+    for mod in ("fastapi", "starlette", "pydantic", "pydantic_core", "uvicorn", "sqlalchemy"):
+        try:
+            out.append(f"{mod} {getattr(importlib.import_module(mod), '__version__', '?')}")
+        except Exception as e:  # logging must never stop the app from starting
+            out.append(f"{mod} ({type(e).__name__})")
+    return ", ".join(out)
+
+
 def _watch(t0, done, every=20):
     """If starting takes long, print what every thread is doing (to find where it's stuck)."""
     while not done.wait(every):
@@ -50,8 +61,7 @@ def start(res_dir: str, data_dir: str) -> int:
         _log("importing uvicorn")
         import uvicorn
 
-        from importlib.metadata import version
-        _log("versions: " + ", ".join(f"{n} {version(n)}" for n in ("fastapi", "starlette", "pydantic", "pydantic-core", "uvicorn", "SQLAlchemy")))
+        _log("versions: " + _versions())
         _log(f"loading the app ({time.time() - t0:.1f}s)")
         from app.main import app  # creates/updates the database and copies in the content
 
