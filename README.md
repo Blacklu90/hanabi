@@ -4,7 +4,7 @@
 [![Latest release](https://img.shields.io/github/v/release/Blacklu90/hanabi)](https://github.com/Blacklu90/hanabi/releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-Hanabi is a complete Japanese-learning web app: hiragana, katakana, vocabulary, and all **2,136 Jōyō kanji**. It's designed for people with ADHD, and for anyone who learns best in short sessions with clear next steps.
+Hanabi is a complete Japanese-learning web app: hiragana, katakana, vocabulary, and all **2,136 Jōyō kanji**. It's built around short study sessions, one clear next step and instant feedback.
 
 ## Install on Linux
 
@@ -51,17 +51,15 @@ The first run builds the kanji and dictionary database from KANJIDIC2, JMdict an
 
 GitHub Actions does this automatically: every push runs the tests, and pushing a tag like `v1.0.0` publishes a release with the AppImage attached.
 
-## Designed for ADHD brains
+## How it helps you study
 
-| Problem | What Hanabi does |
-|---|---|
-| Hard to start | The home screen shows **one** big "Your next step" button. No menus to dig through. |
-| Hard to keep going | **Focus bursts**: pick 2–25 min. A timer follows you, with a natural stop and a break prompt at the end. |
-| Overwhelm | Lessons of 3–7 characters (~3 min). Study screens hide the navigation (**focus mode**, `Esc` to leave). |
-| Need for feedback | Instant right/wrong feedback, small sparks, XP toasts, and progress bars everywhere. All can be turned off. |
-| Streak guilt | **Kind streaks**: one missed day is a free rest day. Only two in a row resets. |
-| Sensory load | Calm mode (no motion), light/dark/system themes, and `prefers-reduced-motion` respected. |
-| Friction | Keyboard shortcuts everywhere (`Space` reveal, `1–4` answer/rate, `Enter` next). Big touch targets and a bottom tab bar on phones. |
+- **One next step:** the home screen shows one big "Your next step" button, so you can start right away.
+- **Focus bursts:** pick 2–25 minutes. A timer follows you, with a natural stop and a break prompt at the end.
+- **Short lessons:** 3–7 characters each (~3 min). Study screens hide the navigation (**focus mode**, `Esc` to leave).
+- **Instant feedback:** right/wrong straight away, small sparks, XP toasts and progress bars. All can be turned off.
+- **Forgiving streaks:** one missed day is a free rest day. Only two in a row resets.
+- **Calm mode:** no motion, plus light, dark and system themes. `prefers-reduced-motion` is respected.
+- **Keyboard shortcuts everywhere** (`Space` reveal, `1–4` answer/rate, `Enter` next), big touch targets and a bottom tab bar on phones.
 
 ## Features
 
