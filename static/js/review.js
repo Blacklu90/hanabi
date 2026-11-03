@@ -55,7 +55,7 @@ if (root) {
       d?.body?.style.setProperty('--hb-accent', getComputedStyle(document.documentElement).getPropertyValue('--accent').trim());
       if (d?.body && 'ResizeObserver' in window) { frameObs = new ResizeObserver(fitFrame); frameObs.observe(d.body); }
       for (const img of d?.images || []) img.addEventListener('load', fitFrame);
-      // Round ▶ buttons (like Anki): Hanabi handles the click, since the card frame itself can't run scripts.
+      // Round ▶ buttons (like Anki): Shuinkan handles the click, since the card frame itself can't run scripts.
       d?.addEventListener('click', (ev) => {
         const b = ev.target.closest?.('.replay-button');
         if (!b) return;

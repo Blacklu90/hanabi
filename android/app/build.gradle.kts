@@ -7,19 +7,19 @@ plugins {
 }
 
 // Keep the app version in step with the desktop app (app/desktop.py).
-val hanabiVersion: String = File(rootDir.parentFile, "app/desktop.py").readLines()
+val shuinkanVersion: String = File(rootDir.parentFile, "app/desktop.py").readLines()
     .first { it.startsWith("VERSION = ") }.substringAfter('"').substringBefore('"')
-val versionParts = hanabiVersion.split(".").map { it.toInt() }
+val versionParts = shuinkanVersion.split(".").map { it.toInt() }
 
 android {
-    namespace = "io.github.blacklu90.hanabi"
+    namespace = "io.github.blacklu90.shuinkan"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "io.github.blacklu90.hanabi"
+        applicationId = "io.github.blacklu90.shuinkan"
         minSdk = 24
         targetSdk = 35
-        versionName = hanabiVersion
+        versionName = shuinkanVersion
         versionCode = versionParts[0] * 10000 + versionParts[1] * 100 + versionParts[2]
         ndk { abiFilters += listOf("arm64-v8a", "x86_64") }  // phones + emulators
     }
@@ -28,14 +28,14 @@ android {
         create("release") {
             // A real release key can be supplied via CI secrets; otherwise the project's published debug key is used,
             // so updates install over each other (same signature) without losing your progress.
-            val ks = System.getenv("HANABI_KEYSTORE")
+            val ks = System.getenv("SHUINKAN_KEYSTORE")
             if (ks != null && File(ks).exists()) {
                 storeFile = File(ks)
-                storePassword = System.getenv("HANABI_KEYSTORE_PASSWORD")
-                keyAlias = System.getenv("HANABI_KEY_ALIAS")
-                keyPassword = System.getenv("HANABI_KEY_PASSWORD")
+                storePassword = System.getenv("SHUINKAN_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("SHUINKAN_KEY_ALIAS")
+                keyPassword = System.getenv("SHUINKAN_KEY_PASSWORD")
             } else {
-                storeFile = File(rootDir, "hanabi-debug.keystore")
+                storeFile = File(rootDir, "shuinkan-debug.keystore")
                 storePassword = "android"
                 keyAlias = "androiddebugkey"
                 keyPassword = "android"

@@ -1,4 +1,4 @@
-"""Measure real response times against a running Hanabi server.
+"""Measure real response times against a running Shuinkan server.
 
 Usage:  .venv/bin/python -m scripts.benchmark [base_url]
 Registers a throw-away user, does a little study so pages have data, then

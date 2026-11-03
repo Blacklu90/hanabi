@@ -21,7 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ---------------------------------------------------------------------------
-The MIT licence above covers Hanabi's own code. The bundled learning data has
+The MIT licence above covers Shuinkan's own code. The bundled learning data has
 its own licences (see DATA_SOURCES.md):
   * KANJIDIC2 and JMdict (EDRDG) ............ CC BY-SA 4.0
   * KanjiVG stroke order (data/strokes) ..... CC BY-SA 3.0

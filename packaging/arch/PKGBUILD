@@ -1,6 +1,6 @@
-# Arch Linux package for Hanabi (installs the release AppImage).
+# Arch Linux package for Shuinkan (installs the release AppImage).
 # Build & install:  cd packaging/arch && makepkg -si
-pkgname=hanabi-bin
+pkgname=shuinkan-bin
 pkgver=1.0.0
 pkgrel=1
 pkgdesc="Learn Japanese in short, focused bursts: kana, all 2,136 Jōyō kanji, Anki-style decks, dictionary"
@@ -9,25 +9,25 @@ _repo="Blacklu90/hanabi"
 url="https://github.com/${_repo}"
 license=('MIT' 'CC-BY-SA-4.0')
 depends=('fuse2' 'zlib' 'glibc')
-optdepends=('chromium: open Hanabi in its own app window (any Chromium-based browser works)'
+optdepends=('chromium: open Shuinkan in its own app window (any Chromium-based browser works)'
             'libnotify: "starting…" notification on first launch')
-provides=('hanabi')
-conflicts=('hanabi')
+provides=('shuinkan')
+conflicts=('shuinkan')
 options=('!strip' '!debug')
-source=("Hanabi-${pkgver}-x86_64.AppImage::${url}/releases/download/v${pkgver}/Hanabi-${pkgver}-x86_64.AppImage")
+source=("Shuinkan-${pkgver}-x86_64.AppImage::${url}/releases/download/v${pkgver}/Shuinkan-${pkgver}-x86_64.AppImage")
 sha256sums=('SKIP')
-noextract=("Hanabi-${pkgver}-x86_64.AppImage")
+noextract=("Shuinkan-${pkgver}-x86_64.AppImage")
 
 prepare() {
-  chmod +x "Hanabi-${pkgver}-x86_64.AppImage"
-  ./"Hanabi-${pkgver}-x86_64.AppImage" --appimage-extract hanabi.desktop >/dev/null
-  ./"Hanabi-${pkgver}-x86_64.AppImage" --appimage-extract hanabi.png >/dev/null
+  chmod +x "Shuinkan-${pkgver}-x86_64.AppImage"
+  ./"Shuinkan-${pkgver}-x86_64.AppImage" --appimage-extract shuinkan.desktop >/dev/null
+  ./"Shuinkan-${pkgver}-x86_64.AppImage" --appimage-extract shuinkan.png >/dev/null
 }
 
 package() {
-  install -Dm755 "Hanabi-${pkgver}-x86_64.AppImage" "${pkgdir}/opt/hanabi/Hanabi.AppImage"
+  install -Dm755 "Shuinkan-${pkgver}-x86_64.AppImage" "${pkgdir}/opt/shuinkan/Shuinkan.AppImage"
   install -dm755 "${pkgdir}/usr/bin"
-  ln -s /opt/hanabi/Hanabi.AppImage "${pkgdir}/usr/bin/hanabi"
-  install -Dm644 squashfs-root/hanabi.desktop "${pkgdir}/usr/share/applications/hanabi.desktop"
-  install -Dm644 squashfs-root/hanabi.png "${pkgdir}/usr/share/icons/hicolor/256x256/apps/hanabi.png"
+  ln -s /opt/shuinkan/Shuinkan.AppImage "${pkgdir}/usr/bin/shuinkan"
+  install -Dm644 squashfs-root/shuinkan.desktop "${pkgdir}/usr/share/applications/shuinkan.desktop"
+  install -Dm644 squashfs-root/shuinkan.png "${pkgdir}/usr/share/icons/hicolor/256x256/apps/shuinkan.png"
 }

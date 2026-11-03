@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en" data-theme="{{ theme }}" data-palette="{{ user.palette if user else 'hanabi' }}" data-calm="{{ (user.calm_mode if user else 0) }}">
+<html lang="en" data-theme="{{ theme }}" data-palette="{{ user.palette if user else 'shuinkan' }}" data-calm="{{ (user.calm_mode if user else 0) }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>{% block title %}Hanabi{% endblock %} · 花火</title>
-<meta name="description" content="Hanabi: learn Japanese kana and all 2,136 Jōyō kanji in short, focused bursts.">
+<title>{% block title %}Shuinkan{% endblock %} · 朱印館</title>
+<meta name="description" content="Shuinkan: learn Japanese kana and all 2,136 Jōyō kanji in short, focused bursts.">
 <meta name="csrf" content="{{ csrf }}">
 <meta name="theme-color" content="#f7f3ec" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#121318" media="(prefers-color-scheme: dark)">
@@ -21,7 +21,7 @@
   ('/dictionary', 'Dictionary', '辞', 'dictionary')] %}
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="{{ '/dashboard' if user else '/' }}" aria-label="Hanabi – home">{% include "_logo.html" %}<span>Hanabi</span></a>
+    <a class="brand" href="{{ '/dashboard' if user else '/' }}" aria-label="Shuinkan – home">{% include "_logo.html" %}<span>Shuinkan</span></a>
     {% if user %}
     <nav class="nav" aria-label="Main">
       {% for href, label, _, sec in nav %}
@@ -65,7 +65,7 @@
   {% block content %}{% endblock %}
   </div>
 </main>
-<footer><div class="wrap row between"><span>花火 Hanabi — Japanese in short, focused bursts.</span><span><a href="/about">Data sources &amp; licences</a></span></div></footer>
+<footer><div class="wrap row between"><span>朱印館 Shuinkan — Japanese in short, focused bursts.</span><span><a href="/about">Data sources &amp; licences</a></span></div></footer>
 {% if user %}
 <nav class="tabbar" aria-label="Main (mobile)">
   {% for href, label, icon, sec in [nav[0], nav[1], nav[3], nav[4], ('/more', 'More', '☰', 'more')] %}

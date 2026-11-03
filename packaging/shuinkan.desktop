@@ -1,21 +1,21 @@
 [Desktop Entry]
 Type=Application
-Name=Hanabi
+Name=Shuinkan
 GenericName=Learn Japanese
 Comment=Japanese in short, focused bursts — kana, 2,136 kanji, decks, dictionary
-Exec=hanabi
-Icon=hanabi
+Exec=shuinkan
+Icon=shuinkan
 Terminal=false
 Categories=Education;Languages;
 Keywords=japanese;kanji;hiragana;katakana;anki;flashcards;nihongo;日本語;
-StartupWMClass=Hanabi
+StartupWMClass=Shuinkan
 StartupNotify=true
 Actions=browser;stop;
 
 [Desktop Action browser]
 Name=Open in my browser
-Exec=hanabi --browser
+Exec=shuinkan --browser
 
 [Desktop Action stop]
-Name=Stop Hanabi
-Exec=hanabi --stop
+Name=Stop Shuinkan
+Exec=shuinkan --stop

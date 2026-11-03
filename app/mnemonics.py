@@ -1,6 +1,6 @@
 """Original memory hooks ("mnemonics") for every kana.
 
-Written for Hanabi. Each hook links the character's *shape* to its *sound*
+Written for Shuinkan. Each hook links the character's *shape* to its *sound*
 (the sound word is in CAPS). Where a real fact helps, it's used: て/te is
 "hand", 二/ni is "two", ロ looks like 口 "mouth", ヘ/へ are the same shape.
 Voiced sounds, combinations and foreign-sound katakana get rule-based hooks

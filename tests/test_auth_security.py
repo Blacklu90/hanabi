@@ -23,7 +23,7 @@ def test_register_login_logout(client):
     assert r.status_code == 400 and "at least 10" in r.text
     r = client.post("/register", data={"username": "zed", "email": "zed@example.com", "password": "long enough pw", "csrf": tok}, follow_redirects=False)
     assert r.status_code == 303
-    cookie = r.cookies.get("hanabi_session") or client.cookies.get("hanabi_session")
+    cookie = r.cookies.get("shuinkan_session") or client.cookies.get("shuinkan_session")
     assert cookie
     assert "httponly" in r.headers["set-cookie"].lower() and "samesite=lax" in r.headers["set-cookie"].lower()
     page = client.get("/dashboard")
@@ -158,12 +158,12 @@ def test_profile_update(user, user2):
 
 def test_palette_setting(user):
     page = user.c.get("/settings")
-    assert 'data-palette="hanabi"' in page.text and 'id="pal-sakura"' in page.text
+    assert 'data-palette="shuinkan"' in page.text and 'id="pal-sakura"' in page.text
     csrf = re.search(r'name="csrf" value="([^"]+)"', page.text).group(1)
     base = {"csrf": csrf, "daily_goal": "20", "mastery_accuracy": "85", "mastery_reps": "4", "mastery_interval": "21",
             "burst_minutes": "5", "theme": "system", "timezone": "UTC"}
     assert user.c.post("/settings", data={**base, "palette": "matcha"}, follow_redirects=False).status_code == 303
     assert 'data-palette="matcha"' in user.c.get("/dashboard").text
     user.c.post("/settings", data={**base, "palette": "<script>"}, follow_redirects=False)
-    assert 'data-palette="hanabi"' in user.c.get("/dashboard").text  # unknown values fall back safely
+    assert 'data-palette="shuinkan"' in user.c.get("/dashboard").text  # unknown values fall back safely
     assert "日本語" in user.c.get("/dashboard").text  # the logo

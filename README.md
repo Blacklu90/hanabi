@@ -1,49 +1,51 @@
-# 日本語 Hanabi — Japanese in short, focused bursts (Linux, Windows & Android)
+# 朱印館 Shuinkan — Japanese in short, focused bursts (Linux, Windows & Android)
 
 [![CI](https://github.com/Blacklu90/hanabi/actions/workflows/ci.yml/badge.svg)](https://github.com/Blacklu90/hanabi/actions/workflows/ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/Blacklu90/hanabi)](https://github.com/Blacklu90/hanabi/releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-Hanabi is a complete Japanese-learning web app: hiragana, katakana, vocabulary, and all **2,136 Jōyō kanji**. It's built around short study sessions, one clear next step and instant feedback.
+Shuinkan is a complete Japanese-learning web app: hiragana, katakana, vocabulary, and all **2,136 Jōyō kanji**. It's built around short study sessions, one clear next step and instant feedback.
+
+The name means "red-seal hall" (朱印館), after the red 日本語 seal in the logo. *Shuinkan was called Hanabi before. If you used Hanabi, your progress is copied over automatically the first time you start Shuinkan, and the old copy is left untouched.*
 
 ## Install on Linux
 
 ### AppImage (any distribution — easiest)
 
-1. Download `Hanabi-<version>-x86_64.AppImage` from the [Releases](https://github.com/Blacklu90/hanabi/releases/latest) page.
+1. Download `Shuinkan-<version>-x86_64.AppImage` from the [Releases](https://github.com/Blacklu90/hanabi/releases/latest) page.
 2. Make it runnable and start it:
    ```bash
-   chmod +x Hanabi-*-x86_64.AppImage
-   ./Hanabi-*-x86_64.AppImage
+   chmod +x Shuinkan-*-x86_64.AppImage
+   ./Shuinkan-*-x86_64.AppImage
    ```
 3. Optional, to put it in your app menu:
    ```bash
-   ./Hanabi-*-x86_64.AppImage --install
+   ./Shuinkan-*-x86_64.AppImage --install
    ```
 
-Hanabi opens in its **own window** if you have a Chromium-based browser (Chromium, Chrome, Brave, Vivaldi or Edge). Closing the window stops Hanabi. Without one, it opens in your default browser. Python is bundled, so there's nothing else to install. On very new distros without `libfuse2`, run it with `--appimage-extract-and-run` or install `fuse2`.
+Shuinkan opens in its **own window** if you have a Chromium-based browser (Chromium, Chrome, Brave, Vivaldi or Edge). Closing the window stops Shuinkan. Without one, it opens in your default browser. Python is bundled, so there's nothing else to install. On very new distros without `libfuse2`, run it with `--appimage-extract-and-run` or install `fuse2`.
 
-Your progress lives in `~/.local/share/hanabi/` and is kept across updates. To update, download the new AppImage (and run `--install` again if you use the menu entry). Other commands: `--browser` (open in your normal browser), `--stop`, `--uninstall` (keeps your progress), `--version`.
+Your progress lives in `~/.local/share/shuinkan/` and is kept across updates. To update, download the new AppImage (and run `--install` again if you use the menu entry). Other commands: `--browser` (open in your normal browser), `--stop`, `--uninstall` (keeps your progress), `--version`.
 
 ## Install on Android
 
-1. On your phone, download **`Hanabi-<version>-android.apk`** from the [Releases](https://github.com/Blacklu90/hanabi/releases/latest) page.
+1. On your phone, download **`Shuinkan-<version>-android.apk`** from the [Releases](https://github.com/Blacklu90/hanabi/releases/latest) page.
 2. Open it. Android will ask you to allow installing apps from your browser or file manager: allow it, then tap **Install**.
-3. Open **Hanabi**. The first start takes about a minute while it sets up the kanji and dictionary data. After that it opens in a few seconds.
+3. Open **Shuinkan**. The first start takes about a minute while it sets up the kanji and dictionary data. After that it opens in a few seconds.
 
-Everything runs **on the phone, offline**: the full Hanabi app (Python) is inside the APK via [Chaquopy](https://chaquo.com/chaquopy/). Your progress stays on the phone. Import Anki decks from **Decks → Import from Anki** (pick an `.apkg` file); exports are saved to your **Downloads** folder. Needs Android 7.0 or newer (64-bit).
+Everything runs **on the phone, offline**: the full Shuinkan app (Python) is inside the APK via [Chaquopy](https://chaquo.com/chaquopy/). Your progress stays on the phone. Import Anki decks from **Decks → Import from Anki** (pick an `.apkg` file); exports are saved to your **Downloads** folder. Needs Android 7.0 or newer (64-bit).
 
 > The APK is signed with the project's own published key (not Google Play), so Android may warn that it's from an unknown source. Updates install over the old version and keep your progress.
 
 ## Install on Windows
 
-1. Download **`Hanabi-Setup-<version>.exe`** from the [Releases](https://github.com/Blacklu90/hanabi/releases/latest) page.
-2. Run it. It installs just for you, with no admin rights needed, and adds Hanabi to the Start menu (a desktop shortcut is optional).
-3. Start **Hanabi** from the Start menu.
+1. Download **`Shuinkan-Setup-<version>.exe`** from the [Releases](https://github.com/Blacklu90/hanabi/releases/latest) page.
+2. Run it. It installs just for you, with no admin rights needed, and adds Shuinkan to the Start menu (a desktop shortcut is optional).
+3. Start **Shuinkan** from the Start menu.
 
-Hanabi opens in its own window using Microsoft Edge, which comes with Windows (or Chrome or Brave if you prefer those). Closing the window stops Hanabi. Your progress is saved in `%LOCALAPPDATA%\Hanabi` and is kept if you uninstall.
+Shuinkan opens in its own window using Microsoft Edge, which comes with Windows (or Chrome or Brave if you prefer those). Closing the window stops Shuinkan. Your progress is saved in `%LOCALAPPDATA%\Shuinkan` and is kept if you uninstall.
 
-Prefer no installer? Download **`Hanabi-<version>-windows-portable.zip`**, unzip it anywhere and run `Hanabi.exe`.
+Prefer no installer? Download **`Shuinkan-<version>-windows-portable.zip`**, unzip it anywhere and run `Shuinkan.exe`.
 
 > Windows may show a "Windows protected your PC" warning the first time, because the app isn't code-signed. Click **More info → Run anyway**.
 
@@ -53,7 +55,7 @@ Prefer no installer? Download **`Hanabi-<version>-windows-portable.zip`**, unzip
 cd packaging/arch && makepkg -si
 ```
 
-This installs the release AppImage as the `hanabi` command, with a menu entry.
+This installs the release AppImage as the `shuinkan` command, with a menu entry.
 
 ### From source (developers)
 
@@ -68,7 +70,7 @@ The first run builds the kanji and dictionary database from KANJIDIC2, JMdict an
 
 ```bash
 ./scripts/fetch_sources.sh && python -m scripts.build_content   # makes data/content.db
-./scripts/build_appimage.sh                                       # makes dist/Hanabi-<version>-x86_64.AppImage
+./scripts/build_appimage.sh                                       # makes dist/Shuinkan-<version>-x86_64.AppImage
 ```
 
 GitHub Actions does this automatically. Every push runs the tests on Linux and Windows and builds the AppImage, the Windows installer, the portable zip and the Android APK. The APK is also started in an Android emulator and checked. Pushing a tag like `v1.0.0` publishes a release with everything attached.
@@ -119,7 +121,7 @@ GitHub Actions does this automatically. Every push runs the tests on Linux and W
 
 ## Security
 
-- scrypt password hashing. Sessions live in the database as SHA-256 hashes of random tokens, in HttpOnly SameSite=Lax cookies (Secure when `HANABI_SECURE_COOKIES=1`). 30-day expiry.
+- scrypt password hashing. Sessions live in the database as SHA-256 hashes of random tokens, in HttpOnly SameSite=Lax cookies (Secure when `SHUINKAN_SECURE_COOKIES=1`). 30-day expiry.
 - CSRF tokens on every form and API write, plus an Origin/Referer check.
 - Rate limits on login, registration, password reset and password change.
 - Strict CSP: scripts and styles only from the same origin. Inline `style=""` attributes are allowed, but `<style>` blocks and inline scripts are not. Also nosniff, frame-deny, referrer and permissions policies. No third-party scripts, fonts, analytics or ads.
@@ -131,13 +133,13 @@ GitHub Actions does this automatically. Every push runs the tests on Linux and W
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `HANABI_DB` | `data/hanabi.db` | SQLite database path |
-| `HANABI_DEV` | `1` | Dev mode: shows the reset link on screen when no SMTP server is set |
-| `HANABI_SECURE_COOKIES` | `0` in dev, `1` otherwise | Secure cookies + HSTS (use behind HTTPS) |
-| `HANABI_SMTP_HOST`, `_PORT`, `_USER`, `_PASSWORD`, `_FROM` | — | Password-reset email |
-| `HANABI_ALLOWED_ORIGINS` | — | Extra origins allowed for POSTs (reverse proxies) |
+| `SHUINKAN_DB` | `data/shuinkan.db` | SQLite database path |
+| `SHUINKAN_DEV` | `1` | Dev mode: shows the reset link on screen when no SMTP server is set |
+| `SHUINKAN_SECURE_COOKIES` | `0` in dev, `1` otherwise | Secure cookies + HSTS (use behind HTTPS) |
+| `SHUINKAN_SMTP_HOST`, `_PORT`, `_USER`, `_PASSWORD`, `_FROM` | — | Password-reset email |
+| `SHUINKAN_ALLOWED_ORIGINS` | — | Extra origins allowed for POSTs (reverse proxies) |
 
-For production: set `HANABI_DEV=0`, put it behind HTTPS, and run a single uvicorn worker (the rate limiter is in-memory).
+For production: set `SHUINKAN_DEV=0`, put it behind HTTPS, and run a single uvicorn worker (the rate limiter is in-memory).
 
 ## Project layout
 
@@ -148,11 +150,11 @@ app/        main.py (app, middleware), pages.py (HTML routes), api.py (JSON API)
             kana.py (curriculum), vocab_list.py, security.py, web.py
 templates/  Jinja2 pages        static/  css/app.css, js/*.js (ES modules, no build)
 data/       content.db (shipped content: kanji, words, dictionary; replaced on update)
-            hanabi.db  (your account + progress; created on first start and never replaced; content is
+            shuinkan.db  (your account + progress; created on first start and never replaced; content is
                         copied in from content.db automatically when a newer one ships)
             strokes/ (KanjiVG SVGs), content_report.json
 scripts/    build_content.py, fetch_sources.sh, build_appimage.sh, benchmark.py
-packaging/  hanabi.desktop, hanabi.png, arch/PKGBUILD, windows/ (PyInstaller recipe, Inno Setup installer, icon)
+packaging/  shuinkan.desktop, shuinkan.png, arch/PKGBUILD, windows/ (PyInstaller recipe, Inno Setup installer, icon)
 android/    Android app: Kotlin WebView shell + Chaquopy (Python); scripts/stage_android.sh copies the app in
 .github/    CI: tests on every push; AppImage on version tags
 tests/      pytest suite
@@ -168,7 +170,7 @@ tests/      pytest suite
 
 ## License
 
-Hanabi's code is open source under the [MIT License](LICENSE). The bundled learning data (KANJIDIC2, JMdict, KanjiVG, Tatoeba) keeps its own licences. See [DATA_SOURCES.md](DATA_SOURCES.md).
+Shuinkan's code is open source under the [MIT License](LICENSE). The bundled learning data (KANJIDIC2, JMdict, KanjiVG, Tatoeba) keeps its own licences. See [DATA_SOURCES.md](DATA_SOURCES.md).
 
 ## Data
 

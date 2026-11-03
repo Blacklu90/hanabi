@@ -1,4 +1,4 @@
-"""Talk to Hanabi running inside the Android emulator (port-forwarded to the host)."""
+"""Talk to Shuinkan running inside the Android emulator (port-forwarded to the host)."""
 import http.cookiejar
 import json
 import re

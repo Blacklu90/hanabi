@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# Start Hanabi on http://127.0.0.1:8000  (first run creates .venv and installs dependencies)
+# Start Shuinkan on http://127.0.0.1:8000  (first run creates .venv and installs dependencies)
 set -e
 cd "$(dirname "$0")"
 if [ ! -d .venv ]; then

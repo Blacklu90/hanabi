@@ -8,10 +8,10 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-_tmp = Path(tempfile.mkdtemp(prefix="hanabi-test-"))
+_tmp = Path(tempfile.mkdtemp(prefix="shuinkan-test-"))
 TEST_DB = _tmp / "test.db"  # starts empty; the app fills content from data/content.db at startup, like a fresh install
-os.environ["HANABI_DB"] = str(TEST_DB)
-os.environ["HANABI_DEV"] = "1"
+os.environ["SHUINKAN_DB"] = str(TEST_DB)
+os.environ["SHUINKAN_DEV"] = "1"
 
 from fastapi.testclient import TestClient  # noqa: E402
 

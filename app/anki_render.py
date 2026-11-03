@@ -6,8 +6,8 @@ tts — chained like {{furigana:Reading}}), special fields ({{Tags}}, {{Deck}},
 {{Subdeck}}, {{Card}}, {{Type}}), cloze deletions and media references.
 
 The rendered HTML is shown inside a sandboxed iframe with a strict Content
-Security Policy (no scripts, no outside requests), so deck HTML can't affect Hanabi.
-The deck's own recorded audio ([sound:file.mp3]) becomes a player; Hanabi plays it
+Security Policy (no scripts, no outside requests), so deck HTML can't affect Shuinkan.
+The deck's own recorded audio ([sound:file.mp3]) becomes a player; Shuinkan plays it
 automatically like Anki (can be switched off in Settings).
 """
 from __future__ import annotations
@@ -139,9 +139,9 @@ def _render(nodes, fields: dict, ctx: dict) -> str:
 
 
 def sounds(s: str) -> str:
-    """[sound:file.mp3] -> Hanabi's own ▶ button + a hidden audio element.
+    """[sound:file.mp3] -> Shuinkan's own ▶ button + a hidden audio element.
     The class names (replay-button, soundLink) are kept so decks that style or hide sound buttons still work.
-    Hanabi (the parent page) plays it on click and autoplays it."""
+    Shuinkan (the parent page) plays it on click and autoplays it."""
     return SOUND.sub(lambda m: (
         '<a class="replay-button soundLink" role="button" tabindex="0" aria-label="Play audio">'
         '<svg class="playImage" viewBox="0 0 40 40" aria-hidden="true"><rect class="pb-bg" x="1" y="1" width="38" height="38" rx="12"/>'

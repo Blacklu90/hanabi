@@ -1,4 +1,4 @@
-package io.github.blacklu90.hanabi
+package io.github.blacklu90.shuinkan
 
 import android.annotation.SuppressLint
 import android.content.ContentValues
@@ -37,7 +37,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * Hanabi for Android: the full Hanabi app (Python) runs inside the APK on 127.0.0.1,
+ * Shuinkan for Android: the full Shuinkan app (Python) runs inside the APK on 127.0.0.1,
  * and this activity shows it full-screen in a WebView. Works offline; nothing leaves the phone.
  */
 class MainActivity : ComponentActivity() {
@@ -68,7 +68,7 @@ class MainActivity : ComponentActivity() {
             allowFileAccess = false
             allowContentAccess = true
             textZoom = 100
-            userAgentString = "$userAgentString HanabiAndroid/${BuildConfig.VERSION_NAME}"
+            userAgentString = "$userAgentString ShuinkanAndroid/${BuildConfig.VERSION_NAME}"
         }
         CookieManager.getInstance().setAcceptCookie(true)
 
@@ -101,16 +101,16 @@ class MainActivity : ComponentActivity() {
             if (web.canGoBack()) web.goBack() else { isEnabled = false; onBackPressedDispatcher.onBackPressed() }
         }
 
-        if (savedInstanceState != null && HanabiServer.port != 0) {
+        if (savedInstanceState != null && ShuinkanServer.port != 0) {
             web.restoreState(savedInstanceState)
             splash.visibility = View.GONE
         } else {
             Thread {
                 try {
-                    val port = HanabiServer.ensureStarted(applicationContext) { msg -> runOnUiThread { status.text = msg } }
+                    val port = ShuinkanServer.ensureStarted(applicationContext) { msg -> runOnUiThread { status.text = msg } }
                     runOnUiThread { web.loadUrl("http://127.0.0.1:$port/") }
                 } catch (e: Throwable) {
-                    runOnUiThread { status.text = "Hanabi couldn't start:\n${e.message}" }
+                    runOnUiThread { status.text = "Shuinkan couldn't start:\n${e.message}" }
                 }
             }.start()
         }
@@ -177,24 +177,24 @@ class MainActivity : ComponentActivity() {
 }
 
 /** Starts the Python app once per process and remembers its port. */
-object HanabiServer {
+object ShuinkanServer {
     @Volatile var port = 0
         private set
 
     @Synchronized
     fun ensureStarted(ctx: Context, progress: (String) -> Unit): Int {
         if (port != 0) return port
-        val res = File(ctx.filesDir, "hanabi-res")
-        val prefs = ctx.getSharedPreferences("hanabi", Context.MODE_PRIVATE)
+        val res = File(ctx.filesDir, "shuinkan-res")
+        val prefs = ctx.getSharedPreferences("shuinkan", Context.MODE_PRIVATE)
         if (prefs.getLong("resVersion", -1) != BuildConfig.VERSION_CODE.toLong() || !File(res, "data/content.db").exists()) {
             progress(ctx.getString(R.string.first_start))
             res.deleteRecursively()
-            copyAssetDir(ctx, "hanabi", res)
+            copyAssetDir(ctx, "shuinkan", res)
             prefs.edit().putLong("resVersion", BuildConfig.VERSION_CODE.toLong()).apply()
         }
         if (!Python.isStarted()) Python.start(AndroidPlatform(ctx))
         val data = File(ctx.filesDir, "data").apply { mkdirs() }
-        port = Python.getInstance().getModule("hanabi_android")
+        port = Python.getInstance().getModule("shuinkan_android")
             .callAttr("start", res.absolutePath, data.absolutePath).toInt()
         return port
     }

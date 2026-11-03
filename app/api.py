@@ -670,7 +670,7 @@ def _kanji_note(ch: str, note=None) -> dict:
     sent = content.kanji_sentences(ch)
     example = f"{e(sent[0]['jp'])}<br><small>{e(sent[0]['en'])}</small>" if sent else ""
     meaning = e(note.meaning) if note and note.meaning else e(k["meanings"].replace("; ", ", "))
-    return {"kind": "kanji", "key": f"kanji:{ch}", "tags": f"hanabi kanji grade{k['grade']}",
+    return {"kind": "kanji", "key": f"kanji:{ch}", "tags": f"shuinkan kanji grade{k['grade']}",
             "fields": [ch, meaning, e(k["onyomi"]), e(k["kunyomi"]), str(k["strokes"]), e(content.GRADE_LABELS[k["grade"]]),
                        words, example, e(note.mnemonic) if note else "", e(note.notes).replace("\n", "<br>") if note else "",
                        f"Jōyō #{k['idx']}"]}
@@ -688,8 +688,8 @@ def _apkg_response(data: bytes, name: str):
 def export_all_kanji(u=Depends(require_user)):
     with db.ro() as c:
         notes = {r.item: r for r in c.execute(select(db.notes).where(db.notes.c.user_id == u["id"], db.notes.c.track == "kanji"))}
-    data = apkg.build_apkg("Hanabi::Jōyō kanji", [_kanji_note(k["char"], notes.get(k["char"])) for k in content.kanji_list()])
-    return _apkg_response(data, "Hanabi Joyo kanji")
+    data = apkg.build_apkg("Shuinkan::Jōyō kanji", [_kanji_note(k["char"], notes.get(k["char"])) for k in content.kanji_list()])
+    return _apkg_response(data, "Shuinkan Joyo kanji")
 
 
 @router.get("/decks/{did}/export.apkg")
@@ -710,11 +710,11 @@ def export_deck(did: int, u=Depends(require_user)):
         elif r["id"] in views:
             v = views[r["id"]]
             extra = "\n".join(x for x in (v.get("reading"), v.get("extra"), v.get("my_mnemonic"), v.get("my_notes")) if x)
-            out.append({"kind": "basic", "key": f"{r['track']}:{r['item']}", "tags": "hanabi",
+            out.append({"kind": "basic", "key": f"{r['track']}:{r['item']}", "tags": "shuinkan",
                         "fields": [e(v["front"]), e(v["answer"]).replace("\n", "<br>"), e(extra).replace("\n", "<br>")]})
     if not out:
         return err("This deck has no cards to export yet.", 409)
-    return _apkg_response(apkg.build_apkg(f"Hanabi::{d.name}", out), d.name)
+    return _apkg_response(apkg.build_apkg(f"Shuinkan::{d.name}", out), d.name)
 
 
 @router.post("/import/apkg", dependencies=W)

@@ -10,7 +10,7 @@ async function run(q, push) {
   last = q;
   const url = q ? `/dictionary?q=${encodeURIComponent(q)}` : '/dictionary';
   history[push ? 'pushState' : 'replaceState'](null, '', url);
-  document.title = `${q ? q + ' · ' : ''}Dictionary · 花火`;
+  document.title = `${q ? q + ' · ' : ''}Dictionary · 朱印館`;
   $('[data-dict-tips]')?.toggleAttribute('hidden', !!q);
   if (!q) { out.replaceChildren(); return; }
   if (cache.has(q)) { out.innerHTML = cache.get(q); return; }

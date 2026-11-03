@@ -55,9 +55,9 @@ def test_export_round_trip(user, tmp_path):
     flds = [r[0].split("\x1f") for r in con.execute("select flds from notes order by id")]
     assert flds[0][0] == "日" and "sun &lt;window&gt;" in flds[0][8] and flds[2][:2] == ["おはよう", "Good morning"]
     assert con.execute("select count(*) from cards").fetchone()[0] == 3
-    # and Hanabi can import its own export
+    # and Shuinkan can import its own export
     back = upload(user, "Exp.apkg", r.content).json()
-    assert back["cards"] == 3 and back["deck"] == "Hanabi › Exp"
+    assert back["cards"] == 3 and back["deck"] == "Shuinkan › Exp"
     assert user.c.get("/api/decks/all-kanji/export.apkg").status_code == 200
     assert user.c.get("/api/decks/999999/export.apkg").status_code == 404
 

@@ -1,4 +1,4 @@
-"""Hanabi — Japanese in short, focused bursts.  Entry point: uvicorn app.main:app"""
+"""Shuinkan — Japanese in short, focused bursts.  Entry point: uvicorn app.main:app"""
 from __future__ import annotations
 
 import logging
@@ -16,7 +16,7 @@ from . import db
 from .security import ALLOWED_ORIGINS, SECURE_COOKIES, SECURITY_HEADERS, new_token
 from .web import CSRF_COOKIE, ROOT, STATIC, load_session, render
 
-log = logging.getLogger("hanabi")
+log = logging.getLogger("shuinkan")
 SAFE = {"GET", "HEAD", "OPTIONS"}
 BUILD_SEG = re.compile(r"^b[0-9a-f]{10}[/\\\\]")  # / on Linux, \\ on Windows (Starlette uses OS separators)
 
@@ -44,7 +44,7 @@ class CachedStatic(StaticFiles):
 
 def create_app() -> FastAPI:
     db.init_db()
-    app = FastAPI(title="Hanabi", docs_url=None, redoc_url=None, openapi_url=None)
+    app = FastAPI(title="Shuinkan", docs_url=None, redoc_url=None, openapi_url=None)
 
     @app.middleware("http")
     async def core(request: Request, call_next):

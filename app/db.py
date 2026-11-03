@@ -12,9 +12,30 @@ from sqlalchemy import (
 )
 
 # Where templates/, static/ and data/ live. Overridable for packaged builds (Android copies them to app storage).
-ROOT = Path(os.environ.get("HANABI_ROOT") or Path(__file__).resolve().parent.parent)
-DB_PATH = Path(os.environ.get("HANABI_DB", ROOT / "data" / "hanabi.db"))            # your account + progress
-CONTENT_DB = Path(os.environ.get("HANABI_CONTENT_DB", ROOT / "data" / "content.db"))  # shipped learning content
+ROOT = Path(os.environ.get("SHUINKAN_ROOT") or Path(__file__).resolve().parent.parent)
+DB_PATH = Path(os.environ.get("SHUINKAN_DB", ROOT / "data" / "shuinkan.db"))            # your account + progress
+CONTENT_DB = Path(os.environ.get("SHUINKAN_CONTENT_DB", ROOT / "data" / "content.db"))  # shipped learning content
+LEGACY_DB_NAME = "hanabi.db"  # the app's old name
+
+
+def adopt_legacy_db(path: Path, extra: list[Path] = ()) -> Path | None:
+    """First start under the new name: copy progress from the old hanabi.db (left untouched) into `path`."""
+    path = Path(path)
+    if path.exists():
+        return None
+    for old in [path.with_name(LEGACY_DB_NAME), *map(Path, extra)]:
+        if old.is_file() and old.resolve() != path.resolve():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            tmp = path.with_name(path.name + ".copying")
+            src = sqlite3.connect(f"{old.resolve().as_uri()}?mode=ro", uri=True)
+            dst = sqlite3.connect(tmp)
+            try:
+                src.backup(dst)  # consistent copy, including anything still in the old WAL file
+            finally:
+                dst.close(); src.close()
+            os.replace(tmp, path)
+            return old
+    return None
 
 metadata = MetaData()
 
@@ -60,7 +81,7 @@ settings = Table(
     Column("celebrations", Integer, nullable=False, server_default="1"),
     Column("timezone", String(64), nullable=False, server_default="UTC"),
     Column("anki_autoplay", Integer, nullable=False, server_default="1"),  # play imported decks' audio automatically
-    Column("palette", String(16), nullable=False, server_default="hanabi"),  # colour palette
+    Column("palette", String(16), nullable=False, server_default="shuinkan"),  # colour palette
 )
 # Per-item learning statistics, any track.
 progress = Table(
@@ -356,7 +377,7 @@ content_meta = Table(
 )
 
 CONTENT_TABLES = [kanji, kanji_vocab, kanji_sentences, kana_vocab, dict_entries, dict_forms, content_meta]
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 # Additive migrations: (version, table, column, DDL). Never drops or rewrites data.
 # (Versions 2–3 added voice settings; sound was later removed. Older databases may still
 #  have unused audio_speed / voice_* columns in `settings`. They are harmless and left alone.)
@@ -372,7 +393,7 @@ MIGRATIONS = [
     (5, "custom_cards", "ord", "ALTER TABLE custom_cards ADD COLUMN ord INTEGER NOT NULL DEFAULT 0"),
     (5, "custom_cards", "tags", "ALTER TABLE custom_cards ADD COLUMN tags VARCHAR(500) NOT NULL DEFAULT ''"),
     (5, "settings", "anki_autoplay", "ALTER TABLE settings ADD COLUMN anki_autoplay INTEGER NOT NULL DEFAULT 1"),
-    (6, "settings", "palette", "ALTER TABLE settings ADD COLUMN palette VARCHAR(16) NOT NULL DEFAULT 'hanabi'"),
+    (6, "settings", "palette", "ALTER TABLE settings ADD COLUMN palette VARCHAR(16) NOT NULL DEFAULT 'shuinkan'"),
 ]
 
 
@@ -388,7 +409,7 @@ def make_engine(path: Path | str = DB_PATH):
     # uri=True lets sync_content ATTACH the shipped content.db read-only (it may live on a read-only AppImage mount)
     eng = create_engine(f"sqlite:///{path.resolve().as_uri()}?uri=true", connect_args={"check_same_thread": False, "timeout": 15},
                         pool_size=8, max_overflow=8)
-    eng.hanabi_path = path.resolve()  # the real file path (works on Linux and Windows)
+    eng.shuinkan_path = path.resolve()  # the real file path (works on Linux and Windows)
 
     @event.listens_for(eng, "connect")
     def _pragmas(dbapi_conn: sqlite3.Connection, _):
@@ -404,6 +425,7 @@ def make_engine(path: Path | str = DB_PATH):
     return eng
 
 
+adopt_legacy_db(DB_PATH, [p for p in os.environ.get("SHUINKAN_LEGACY_DB", "").split(os.pathsep) if p])
 engine = make_engine()
 
 
@@ -426,6 +448,8 @@ def init_db(eng=None) -> None:
             c.execute(text("""UPDATE srs_cards SET introduced_at = COALESCE(
                               (SELECT MIN(r.created_at) FROM reviews r WHERE r.card_id = srs_cards.id), last_review_at)
                               WHERE total_reviews > 0 AND introduced_at IS NULL"""))
+        if c.execute(text("SELECT 1 FROM schema_migrations WHERE version=7")).first() is None:
+            c.execute(text("UPDATE settings SET palette='shuinkan' WHERE palette='hanabi'"))  # the default palette's old name
         for v in range(1, SCHEMA_VERSION + 1):
             if c.execute(text("SELECT 1 FROM schema_migrations WHERE version=:v"), {"v": v}).first() is None:
                 c.execute(schema_migrations.insert().values(version=v, applied_at=int(time.time())))
@@ -456,7 +480,7 @@ def sync_content(eng, src: Path | None = None) -> bool:
     Runs at startup, takes a few seconds once per content update.
     """
     src = Path(src or CONTENT_DB)
-    if not src.exists() or src.resolve() == getattr(eng, "hanabi_path", None):
+    if not src.exists() or src.resolve() == getattr(eng, "shuinkan_path", None):
         return False
     raw = eng.raw_connection()
     try:

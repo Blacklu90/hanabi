@@ -1,6 +1,6 @@
 # Data sources, licences and validation
 
-No Japanese content in Hanabi is invented. The only hand-written parts are the kana tables (standard gojūon, modern Hepburn romaji), which **words** to teach, and their categories. Each word's meaning and kanji spelling are looked up in JMdict by `scripts/build_content.py`, and the build fails if a word can't be matched.
+No Japanese content in Shuinkan is invented. The only hand-written parts are the kana tables (standard gojūon, modern Hepburn romaji), which **words** to teach, and their categories. Each word's meaning and kanji spelling are looked up in JMdict by `scripts/build_content.py`, and the build fails if a word can't be matched.
 
 | Dataset | Edition | Used for | Licence |
 |---|---|---|---|

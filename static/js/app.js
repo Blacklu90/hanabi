@@ -1,4 +1,4 @@
-// Hanabi core: fetch helper, toasts, celebrations, menus, focus bursts.
+// Shuinkan core: fetch helper, toasts, celebrations, menus, focus bursts.
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 export { $, $$ };
@@ -79,7 +79,7 @@ function stampTimes(root = document) {
 }
 
 // ---------------------------------------------------------- burst
-const BURST_KEY = 'hanabi-burst';
+const BURST_KEY = 'shuinkan-burst';
 function burstState() { try { return JSON.parse(sessionStorage.getItem(BURST_KEY) || 'null'); } catch { return null; } }
 function setBurst(v) { try { v ? sessionStorage.setItem(BURST_KEY, JSON.stringify(v)) : sessionStorage.removeItem(BURST_KEY); } catch { /* storage off */ } }
 export async function startBurst() {

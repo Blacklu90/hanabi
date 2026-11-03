@@ -1,7 +1,7 @@
 {% extends "base.html" %}{% block title %}Home{% endblock %}
 {% block content %}
 <div class="row between page-head" style="margin-bottom:18px">
-  <div><div class="eyebrow">{{ 'Welcome to Hanabi 🎆' if welcome else ('Today' ) }}</div><h1 style="margin:0">Hi, {{ user.display_name }}</h1></div>
+  <div><div class="eyebrow">{{ 'Welcome to Shuinkan 🎉' if welcome else ('Today' ) }}</div><h1 style="margin:0">Hi, {{ user.display_name }}</h1></div>
   <button class="btn ink" data-burst type="button" title="Start a timed focus session">⏱ {{ user.burst_minutes }}-min burst</button>
 </div>
 

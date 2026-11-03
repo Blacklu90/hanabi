@@ -1,4 +1,4 @@
-"""Android entry point: start Hanabi's server inside the app (called from MainActivity via Chaquopy)."""
+"""Android entry point: start Shuinkan's server inside the app (called from MainActivity via Chaquopy)."""
 import os
 import socket
 import threading
@@ -23,10 +23,10 @@ def _free_port(preferred=8765):
 def start(res_dir: str, data_dir: str) -> int:
     """res_dir holds templates/, static/ and data/ (copied from the APK); data_dir holds your progress."""
     global _server
-    os.environ["HANABI_ROOT"] = res_dir
-    os.environ["HANABI_DB"] = os.path.join(data_dir, "hanabi.db")
-    os.environ["HANABI_CONTENT_DB"] = os.path.join(res_dir, "data", "content.db")
-    os.environ.setdefault("HANABI_DEV", "1")  # single-user app on your phone: show password-reset links on screen
+    os.environ["SHUINKAN_ROOT"] = res_dir
+    os.environ["SHUINKAN_DB"] = os.path.join(data_dir, "shuinkan.db")
+    os.environ["SHUINKAN_CONTENT_DB"] = os.path.join(res_dir, "data", "content.db")
+    os.environ.setdefault("SHUINKAN_DEV", "1")  # single-user app on your phone: show password-reset links on screen
 
     import uvicorn
 
@@ -35,7 +35,7 @@ def start(res_dir: str, data_dir: str) -> int:
     port = _free_port()
     _server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning", lifespan="off",
                                             loop="asyncio", http="h11", ws="none"))
-    threading.Thread(target=_server.run, name="hanabi-server", daemon=True).start()
+    threading.Thread(target=_server.run, name="shuinkan-server", daemon=True).start()
     for _ in range(600):
         if _server.started:
             break

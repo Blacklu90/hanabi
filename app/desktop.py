@@ -1,21 +1,21 @@
-"""Hanabi desktop launcher (Linux and Windows).
+"""Shuinkan desktop launcher (Linux and Windows).
 
-  hanabi               start Hanabi and open it in its own window
-  hanabi --browser     open in your normal browser instead of an app window
-  hanabi --install     add Hanabi to your app menu (and desktop) — for the AppImage
-  hanabi --uninstall   remove the menu entry (your progress is kept)
-  hanabi --stop        stop a running Hanabi
-  hanabi --version
+  shuinkan               start Shuinkan and open it in its own window
+  shuinkan --browser     open in your normal browser instead of an app window
+  shuinkan --install     add Shuinkan to your app menu (and desktop) — for the AppImage
+  shuinkan --uninstall   remove the menu entry (your progress is kept)
+  shuinkan --stop        stop a running Shuinkan
+  shuinkan --version
 
-How it works: the Hanabi server runs inside this process on 127.0.0.1 only.
+How it works: the Shuinkan server runs inside this process on 127.0.0.1 only.
 If a Chromium-based browser is installed (Chromium, Chrome, Brave, Vivaldi, Edge)
-Hanabi opens in an app window (no tabs or address bar) with its own profile, and
-closing that window stops Hanabi. Otherwise it opens in your default browser and
-stops by itself after 2 hours without use (or with `hanabi --stop`).
+Shuinkan opens in an app window (no tabs or address bar) with its own profile, and
+closing that window stops Shuinkan. Otherwise it opens in your default browser and
+stops by itself after 2 hours without use (or with `shuinkan --stop`).
 
-Your data lives in $XDG_DATA_HOME/hanabi (normally ~/.local/share/hanabi, the same
+Your data lives in $XDG_DATA_HOME/shuinkan (normally ~/.local/share/shuinkan, the same
 folder the older install.sh used, so progress carries over) or, on Windows,
-%LOCALAPPDATA%/Hanabi. On Windows the app window uses Microsoft Edge (built in).
+%LOCALAPPDATA%/Shuinkan. On Windows the app window uses Microsoft Edge (built in).
 """
 from __future__ import annotations
 
@@ -37,9 +37,11 @@ WINDOWS = os.name == "nt"
 FROZEN = getattr(sys, "frozen", False)  # running from the packaged Windows .exe (PyInstaller)
 APP_ROOT = Path(getattr(sys, "_MEIPASS", "")) if FROZEN else Path(__file__).resolve().parent.parent
 if WINDOWS:
-    DATA_HOME = Path(os.environ.get("LOCALAPPDATA") or Path.home() / "AppData" / "Local") / "Hanabi"
+    _BASE = Path(os.environ.get("LOCALAPPDATA") or Path.home() / "AppData" / "Local")
+    DATA_HOME, OLD_HOME = _BASE / "Shuinkan", _BASE / "Hanabi"
 else:
-    DATA_HOME = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share") / "hanabi"
+    _BASE = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share")
+    DATA_HOME, OLD_HOME = _BASE / "shuinkan", _BASE / "hanabi"  # the app was called Hanabi before
 STATE = DATA_HOME / "desktop-state.json"
 IDLE_LIMIT = 2 * 3600
 CHROMIUMS = ["chromium", "chromium-browser", "google-chrome-stable", "google-chrome", "brave", "brave-browser",
@@ -50,7 +52,7 @@ def _quiet_console() -> None:
     """A windowed Windows app has no console: send output to a log file instead of nowhere."""
     if sys.stdout is None or sys.stderr is None:
         DATA_HOME.mkdir(parents=True, exist_ok=True)
-        log = open(DATA_HOME / "hanabi.log", "a", encoding="utf-8", buffering=1)
+        log = open(DATA_HOME / "shuinkan.log", "a", encoding="utf-8", buffering=1)
         sys.stdout = sys.stdout or log
         sys.stderr = sys.stderr or log
 
@@ -58,7 +60,7 @@ def _quiet_console() -> None:
 def notify(msg: str) -> None:
     print(msg, flush=True)
     if not WINDOWS and shutil.which("notify-send") and not sys.stdout.isatty():
-        subprocess.Popen(["notify-send", "-a", "Hanabi", "-i", "hanabi", "Hanabi", msg],
+        subprocess.Popen(["notify-send", "-a", "Shuinkan", "-i", "shuinkan", "Shuinkan", msg],
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
@@ -117,7 +119,7 @@ def open_window(url: str, force_browser: bool):
     if chrome:
         profile = DATA_HOME / "window-profile"
         profile.mkdir(parents=True, exist_ok=True)
-        args = [f"--app={url}", f"--user-data-dir={profile}", "--class=Hanabi", "--name=Hanabi", "--no-first-run",
+        args = [f"--app={url}", f"--user-data-dir={profile}", "--class=Shuinkan", "--name=Shuinkan", "--no-first-run",
                 "--no-default-browser-check", "--disable-features=Translate,MediaRouter", "--window-size=1200,860",
                 "--disable-background-networking", "--disable-component-update", "--disable-sync", "--no-pings"]
         cmd = ["flatpak", "run", chrome.split(":", 1)[1], *args] if chrome.startswith("flatpak:") else [chrome, *args]
@@ -143,13 +145,15 @@ def run(force_browser: bool) -> int:
         open_window(f"http://127.0.0.1:{st['port']}/", force_browser)
         return 0
     DATA_HOME.joinpath("data").mkdir(parents=True, exist_ok=True)
-    os.environ.setdefault("HANABI_DB", str(DATA_HOME / "data" / "hanabi.db"))
-    os.environ.setdefault("HANABI_CONTENT_DB", str(APP_ROOT / "data" / "content.db"))
-    os.environ.setdefault("HANABI_DEV", "1")  # local single-user app: show password-reset links on screen
+    os.environ.setdefault("SHUINKAN_DB", str(DATA_HOME / "data" / "shuinkan.db"))
+    # Progress from the old name is copied over on first start (the old folder is left as it was).
+    os.environ.setdefault("SHUINKAN_LEGACY_DB", str(OLD_HOME / "data" / "hanabi.db"))
+    os.environ.setdefault("SHUINKAN_CONTENT_DB", str(APP_ROOT / "data" / "content.db"))
+    os.environ.setdefault("SHUINKAN_DEV", "1")  # local single-user app: show password-reset links on screen
     port = free_port()
     url = f"http://127.0.0.1:{port}/"
-    if not (DATA_HOME / "data" / "hanabi.db").exists():
-        notify("Setting up Hanabi for the first time… (a few seconds)")
+    if not (DATA_HOME / "data" / "shuinkan.db").exists():
+        notify("Setting up Shuinkan for the first time… (a few seconds)")
 
     if not FROZEN:
         sys.path.insert(0, str(APP_ROOT))
@@ -174,14 +178,14 @@ def run(force_browser: bool) -> int:
     stop = threading.Event()
     signal.signal(signal.SIGTERM, lambda *_: stop.set())
     signal.signal(signal.SIGINT, lambda *_: stop.set())
-    if WINDOWS:  # `Hanabi.exe --stop` drops this file to ask the running copy to quit cleanly
+    if WINDOWS:  # `Shuinkan.exe --stop` drops this file to ask the running copy to quit cleanly
         stop_file = DATA_HOME / "stop-request"
         stop_file.unlink(missing_ok=True)
         threading.Thread(target=_watch_stop_file, args=(stop, stop_file), daemon=True).start()
     win = open_window(url, force_browser)
     opened = time.time()
     try:
-        if win is not None:  # app window: Hanabi lives as long as the window
+        if win is not None:  # app window: Shuinkan lives as long as the window
             while not stop.is_set() and win.poll() is None:
                 stop.wait(0.5)
             if not stop.is_set() and time.time() - opened < 8:
@@ -191,7 +195,7 @@ def run(force_browser: bool) -> int:
                     open_window(url, True)
                 win = None
         if win is None and not stop.is_set():  # default browser: stop after a long idle period
-            print(f"Hanabi is running at {url} — close it with: hanabi --stop")
+            print(f"Shuinkan is running at {url} — close it with: shuinkan --stop")
             while not stop.is_set() and time.time() - last_hit[0] < IDLE_LIMIT:
                 stop.wait(5)
     finally:
@@ -216,16 +220,16 @@ def stop_running() -> int:
     st = read_state()
     if WINDOWS and st.get("port") and alive(st["port"]):
         (DATA_HOME / "stop-request").write_text("stop")
-        print("Hanabi is stopping.")
+        print("Shuinkan is stopping.")
         return 0
     if st.get("pid"):
         try:
             os.kill(st["pid"], signal.SIGTERM)
-            print("Hanabi stopped.")
+            print("Shuinkan stopped.")
             return 0
         except ProcessLookupError:
             pass
-    print("Hanabi isn't running.")
+    print("Shuinkan isn't running.")
     return 0
 
 
@@ -233,20 +237,20 @@ def stop_running() -> int:
 def desktop_paths():
     apps = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share") / "applications"
     icons = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share") / "icons" / "hicolor"
-    return apps / "hanabi.desktop", icons
+    return apps / "shuinkan.desktop", icons
 
 
 def install() -> int:
     if WINDOWS:
-        print("On Windows, use Hanabi-Setup.exe to add Hanabi to the Start menu.")
+        print("On Windows, use Shuinkan-Setup.exe to add Shuinkan to the Start menu.")
         return 0
     appimage = os.environ.get("APPIMAGE")
-    exe = appimage or shutil.which("hanabi")
+    exe = appimage or shutil.which("shuinkan")
     if not exe:
-        print("Run --install from the Hanabi AppImage (or install the package).")
+        print("Run --install from the Shuinkan AppImage (or install the package).")
         return 1
     if appimage:  # keep a stable copy so the menu entry survives moving/deleting the download
-        dest = Path.home() / "Applications" / "Hanabi.AppImage"
+        dest = Path.home() / "Applications" / "Shuinkan.AppImage"
         dest.parent.mkdir(exist_ok=True)
         if Path(appimage).resolve() != dest.resolve():
             shutil.copy2(appimage, dest)
@@ -256,30 +260,30 @@ def install() -> int:
     entry.parent.mkdir(parents=True, exist_ok=True)
     for size in ("256x256", "scalable"):
         (icons / size / "apps").mkdir(parents=True, exist_ok=True)
-    shutil.copy2(APP_ROOT / "packaging" / "hanabi.png", icons / "256x256" / "apps" / "hanabi.png")
-    shutil.copy2(APP_ROOT / "static" / "img" / "icon.svg", icons / "scalable" / "apps" / "hanabi.svg")
-    text = (APP_ROOT / "packaging" / "hanabi.desktop").read_text(encoding="utf-8").replace("Exec=hanabi", f'Exec="{exe}"')
+    shutil.copy2(APP_ROOT / "packaging" / "shuinkan.png", icons / "256x256" / "apps" / "shuinkan.png")
+    shutil.copy2(APP_ROOT / "static" / "img" / "icon.svg", icons / "scalable" / "apps" / "shuinkan.svg")
+    text = (APP_ROOT / "packaging" / "shuinkan.desktop").read_text(encoding="utf-8").replace("Exec=shuinkan", f'Exec="{exe}"')
     entry.write_text(text, encoding="utf-8")
     entry.chmod(0o755)
     desk = Path(subprocess.run(["xdg-user-dir", "DESKTOP"], capture_output=True, text=True).stdout.strip() or Path.home() / "Desktop") \
         if shutil.which("xdg-user-dir") else Path.home() / "Desktop"
     if desk.is_dir():
-        shutil.copy2(entry, desk / "hanabi.desktop")
-        subprocess.run(["gio", "set", str(desk / "hanabi.desktop"), "metadata::trusted", "true"], capture_output=True)
+        shutil.copy2(entry, desk / "shuinkan.desktop")
+        subprocess.run(["gio", "set", str(desk / "shuinkan.desktop"), "metadata::trusted", "true"], capture_output=True)
     for cmd in (["update-desktop-database", str(entry.parent)], ["gtk-update-icon-cache", "-q", "-t", str(icons)]):
         if shutil.which(cmd[0]):
             subprocess.run(cmd, capture_output=True)
-    print(f"Installed. Find “Hanabi” in your app menu. (App file: {exe})")
+    print(f"Installed. Find “Shuinkan” in your app menu. (App file: {exe})")
     return 0
 
 
 def uninstall() -> int:
     if WINDOWS:
-        print("On Windows, uninstall Hanabi from Settings → Apps. Your progress stays in", DATA_HOME)
+        print("On Windows, uninstall Shuinkan from Settings → Apps. Your progress stays in", DATA_HOME)
         return 0
     entry, icons = desktop_paths()
-    for p in (entry, Path.home() / "Desktop" / "hanabi.desktop", icons / "256x256" / "apps" / "hanabi.png",
-              icons / "scalable" / "apps" / "hanabi.svg", Path.home() / "Applications" / "Hanabi.AppImage"):
+    for p in (entry, Path.home() / "Desktop" / "shuinkan.desktop", icons / "256x256" / "apps" / "shuinkan.png",
+              icons / "scalable" / "apps" / "shuinkan.svg", Path.home() / "Applications" / "Shuinkan.AppImage"):
         try:
             p.unlink()
         except FileNotFoundError:
@@ -290,12 +294,12 @@ def uninstall() -> int:
 
 def main(argv=None) -> int:
     _quiet_console()
-    ap = argparse.ArgumentParser(prog="hanabi", description="Hanabi — Japanese in short, focused bursts.")
+    ap = argparse.ArgumentParser(prog="shuinkan", description="Shuinkan — Japanese in short, focused bursts.")
     ap.add_argument("--browser", action="store_true", help="open in your normal browser instead of an app window")
-    ap.add_argument("--install", action="store_true", help="add Hanabi to your app menu")
-    ap.add_argument("--uninstall", action="store_true", help="remove Hanabi from your app menu (keeps your progress)")
-    ap.add_argument("--stop", action="store_true", help="stop a running Hanabi")
-    ap.add_argument("--version", action="version", version=f"Hanabi {VERSION}")
+    ap.add_argument("--install", action="store_true", help="add Shuinkan to your app menu")
+    ap.add_argument("--uninstall", action="store_true", help="remove Shuinkan from your app menu (keeps your progress)")
+    ap.add_argument("--stop", action="store_true", help="stop a running Shuinkan")
+    ap.add_argument("--version", action="version", version=f"Shuinkan {VERSION}")
     a = ap.parse_args(argv)
     if a.install:
         return install()

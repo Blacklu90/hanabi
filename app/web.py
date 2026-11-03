@@ -18,9 +18,9 @@ from . import content, db, gamify
 from .kana import SCRIPTS
 from .security import DEV, SECURE_COOKIES, SESSION_COOKIE, SESSION_DAYS, new_token, token_hash
 
-ROOT = Path(os.environ.get("HANABI_ROOT") or Path(__file__).resolve().parent.parent)
+ROOT = Path(os.environ.get("SHUINKAN_ROOT") or Path(__file__).resolve().parent.parent)
 STATIC = ROOT / "static"
-CSRF_COOKIE = "hanabi_csrf"
+CSRF_COOKIE = "shuinkan_csrf"
 SECTIONS = {"vocab": "learn", "hooks": "learn", "write": "quiz", "match": "quiz", "browse": "decks"}
 
 templates = Jinja2Templates(directory=str(ROOT / "templates"))

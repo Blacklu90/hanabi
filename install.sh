@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# Hanabi installer for Linux: run once, then start Hanabi from your app menu.
+# Shuinkan installer for Linux: run once, then start Shuinkan from your app menu.
 #   ./install.sh            install / update
 #   ./install.sh --remove   remove the app (asks before deleting your progress)
 set -e
-APP="$HOME/.local/share/hanabi"
+APP="$HOME/.local/share/shuinkan"
 BIN="$HOME/.local/bin"
 DESK="$HOME/.local/share/applications"
 SRC="$(cd "$(dirname "$0")" && pwd)"
 
 if [ "$1" = "--remove" ]; then
-  "$BIN/hanabi" stop 2>/dev/null || true
-  rm -f "$BIN/hanabi" "$DESK/hanabi.desktop" "$HOME/Desktop/hanabi.desktop"
-  read -r -p "Also delete your Hanabi progress and account data in $APP? [y/N] " a
+  "$BIN/shuinkan" stop 2>/dev/null || true
+  rm -f "$BIN/shuinkan" "$DESK/shuinkan.desktop" "$HOME/Desktop/shuinkan.desktop"
+  read -r -p "Also delete your Shuinkan progress and account data in $APP? [y/N] " a
   if [ "$a" = "y" ] || [ "$a" = "Y" ]; then rm -rf "$APP"; echo "Removed everything."; else echo "App removed. Your data is still in $APP"; fi
   exit 0
 fi
@@ -21,14 +21,24 @@ if ! command -v python3 >/dev/null; then
   exit 1
 fi
 
-[ -x "$BIN/hanabi" ] && "$BIN/hanabi" stop >/dev/null 2>&1 || true  # restart on the new version
-echo "→ Installing Hanabi to $APP"
+[ -x "$BIN/shuinkan" ] && "$BIN/shuinkan" stop >/dev/null 2>&1 || true  # restart on the new version
+echo "→ Installing Shuinkan to $APP"
 mkdir -p "$APP" "$BIN" "$DESK"
+# This app used to be called Hanabi: bring your progress over (the old folder is left as it was).
+OLD="$HOME/.local/share/hanabi"
+if [ -f "$OLD/data/hanabi.db" ] && [ ! -f "$APP/data/shuinkan.db" ]; then
+  [ -x "$BIN/hanabi" ] && "$BIN/hanabi" stop >/dev/null 2>&1 || true
+  mkdir -p "$APP/data"
+  python3 -c "import sqlite3,sys; s=sqlite3.connect(sys.argv[1]); d=sqlite3.connect(sys.argv[2]); s.backup(d); d.close(); s.close()" \
+    "$OLD/data/hanabi.db" "$APP/data/shuinkan.db"
+  rm -f "$BIN/hanabi" "$DESK/hanabi.desktop" "$HOME/Desktop/hanabi.desktop"  # old launcher and menu entries
+  echo "→ Copied your Hanabi progress (the old copy is still in $OLD)"
+fi
 # Copy the app, but never overwrite an existing database (that's your progress).
-if [ -f "$APP/data/hanabi.db" ]; then
+if [ -f "$APP/data/shuinkan.db" ]; then
   echo "→ Keeping your existing progress"
-  cp "$APP/data/hanabi.db" "$APP/data/hanabi.db.before-update"
-  tar -C "$SRC" --exclude=.venv --exclude=data/hanabi.db --exclude='data/hanabi.db-*' -cf - . | tar -C "$APP" -xf -
+  cp "$APP/data/shuinkan.db" "$APP/data/shuinkan.db.before-update"
+  tar -C "$SRC" --exclude=.venv --exclude=data/shuinkan.db --exclude='data/shuinkan.db-*' -cf - . | tar -C "$APP" -xf -
 else
   tar -C "$SRC" --exclude=.venv -cf - . | tar -C "$APP" -xf -
 fi
@@ -46,7 +56,7 @@ if [ ! -f "$APP/data/content.db" ]; then
   (cd "$APP" && ./scripts/fetch_sources.sh && .venv/bin/python -m scripts.build_content >/dev/null)
 fi
 
-# Sound was removed from Hanabi: clean up files and the ~350 MB voice package left by older versions.
+# Sound was removed from Shuinkan: clean up files and the ~350 MB voice package left by older versions.
 rm -rf "$APP/data/tts_cache"
 rm -f "$APP/app/tts.py" "$APP/requirements-voice.txt" "$APP/tests/test_tts.py"
 if "$APP/.venv/bin/python" -c "import pyopenjtalk" >/dev/null 2>&1; then
@@ -54,51 +64,51 @@ if "$APP/.venv/bin/python" -c "import pyopenjtalk" >/dev/null 2>&1; then
   "$APP/.venv/bin/pip" uninstall -y -q pyopenjtalk-plus sudachidict_core sudachipy 2>/dev/null || true
 fi
 
-cat > "$BIN/hanabi" <<EOF
+cat > "$BIN/shuinkan" <<EOF
 #!/usr/bin/env bash
-# hanabi        start (if needed) and open in the browser
-# hanabi stop   stop the background server
-APP="$APP"; URL="http://127.0.0.1:8000"; PIDF="\$APP/hanabi.pid"
+# shuinkan        start (if needed) and open in the browser
+# shuinkan stop   stop the background server
+APP="$APP"; URL="http://127.0.0.1:8000"; PIDF="\$APP/shuinkan.pid"
 running() { [ -f "\$PIDF" ] && kill -0 "\$(cat "\$PIDF")" 2>/dev/null; }
 if [ "\$1" = "stop" ]; then
-  running && kill "\$(cat "\$PIDF")" && echo "Hanabi stopped."; rm -f "\$PIDF"; exit 0
+  running && kill "\$(cat "\$PIDF")" && echo "Shuinkan stopped."; rm -f "\$PIDF"; exit 0
 fi
 if ! running; then
   cd "\$APP"
-  nohup "\$APP/.venv/bin/uvicorn" app.main:app --host 127.0.0.1 --port 8000 --log-level warning > "\$APP/hanabi.log" 2>&1 &
+  nohup "\$APP/.venv/bin/uvicorn" app.main:app --host 127.0.0.1 --port 8000 --log-level warning > "\$APP/shuinkan.log" 2>&1 &
   echo \$! > "\$PIDF"
   for i in \$(seq 1 150); do curl -s -o /dev/null "\$URL" && break; sleep 0.2; done  # first start after an update copies new content in
 fi
 xdg-open "\$URL" >/dev/null 2>&1 &
 EOF
-chmod +x "$BIN/hanabi"
+chmod +x "$BIN/shuinkan"
 
-cat > "$DESK/hanabi.desktop" <<EOF
+cat > "$DESK/shuinkan.desktop" <<EOF
 [Desktop Entry]
 Type=Application
-Name=Hanabi
+Name=Shuinkan
 GenericName=Learn Japanese
 Comment=Japanese in short, focused bursts
-Exec=$BIN/hanabi
+Exec=$BIN/shuinkan
 Icon=$APP/static/img/icon.svg
 Terminal=false
 Categories=Education;Languages;
 Actions=stop;
 
 [Desktop Action stop]
-Name=Stop Hanabi server
-Exec=$BIN/hanabi stop
+Name=Stop Shuinkan server
+Exec=$BIN/shuinkan stop
 EOF
-chmod +x "$DESK/hanabi.desktop"
+chmod +x "$DESK/shuinkan.desktop"
 if [ -d "$HOME/Desktop" ]; then
-  cp "$DESK/hanabi.desktop" "$HOME/Desktop/hanabi.desktop"
-  chmod +x "$HOME/Desktop/hanabi.desktop"
-  gio set "$HOME/Desktop/hanabi.desktop" metadata::trusted true 2>/dev/null || true
+  cp "$DESK/shuinkan.desktop" "$HOME/Desktop/shuinkan.desktop"
+  chmod +x "$HOME/Desktop/shuinkan.desktop"
+  gio set "$HOME/Desktop/shuinkan.desktop" metadata::trusted true 2>/dev/null || true
 fi
 command -v update-desktop-database >/dev/null && update-desktop-database "$DESK" 2>/dev/null || true
 
 echo
-echo "✓ Done! Open Hanabi from your app menu (search \"Hanabi\") or the desktop icon."
-echo "  Or type:  hanabi        (stop it with: hanabi stop)"
-case ":$PATH:" in *":$BIN:"*) ;; *) echo "  (To use the 'hanabi' command, add ~/.local/bin to your PATH.)";; esac
-"$BIN/hanabi"
+echo "✓ Done! Open Shuinkan from your app menu (search \"Shuinkan\") or the desktop icon."
+echo "  Or type:  shuinkan        (stop it with: shuinkan stop)"
+case ":$PATH:" in *":$BIN:"*) ;; *) echo "  (To use the 'shuinkan' command, add ~/.local/bin to your PATH.)";; esac
+"$BIN/shuinkan"

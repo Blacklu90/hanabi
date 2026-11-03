@@ -10,13 +10,13 @@ dist/
 data/source/*.json
 data/source/*.zip
 data/content.db
-data/hanabi.db
-data/hanabi.db-*
+data/shuinkan.db
+data/shuinkan.db-*
 data/*.before-update
 data/backups/
 data/tts_cache/
-hanabi.pid
-hanabi.log
+shuinkan.pid
+shuinkan.log
 
 # Arch packaging leftovers
 packaging/arch/*.AppImage
@@ -32,3 +32,5 @@ android/.gradle/
 android/build/
 android/app/build/
 android/local.properties
+data/hanabi.db
+data/hanabi.db-*

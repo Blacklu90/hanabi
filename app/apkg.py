@@ -1,12 +1,12 @@
 """Anki .apkg export and import (no Anki installation needed).
 
 Export writes a classic Anki "collection.anki2" (schema 11) package, which current
-Anki, AnkiDroid and AnkiMobile all import. Kanji become notes of a "Hanabi Kanji"
+Anki, AnkiDroid and AnkiMobile all import. Kanji become notes of a "Shuinkan Kanji"
 note type with separate fields, so they can be restyled in Anki.
 
 Import reads all three package flavours: collection.anki21b (zstd-compressed,
 newest), collection.anki21 and collection.anki2. Field HTML is converted to plain
-text (no scripts, styles or remote images ever reach Hanabi). Media is skipped.
+text (no scripts, styles or remote images ever reach Shuinkan). Media is skipped.
 """
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ MAX_UPLOAD = 1024 * 1024 * 1024        # 1 GB: decks with recorded audio are big
 MAX_UNZIPPED = 4 * 1024 * 1024 * 1024  # guard against zip bombs
 MAX_NOTES = 50_000
 
-KANJI_FIELDS = ["Kanji", "Meaning", "Onyomi", "Kunyomi", "Strokes", "Grade", "Words", "Example", "MyHook", "MyNotes", "Hanabi"]
+KANJI_FIELDS = ["Kanji", "Meaning", "Onyomi", "Kunyomi", "Strokes", "Grade", "Words", "Example", "MyHook", "MyNotes", "Shuinkan"]
 KANJI_FRONT = '<div class="k">{{Kanji}}</div>'
 KANJI_BACK = """{{FrontSide}}
 <hr id=answer>
@@ -77,7 +77,7 @@ def _model(mid: int, name: str, fields: list[str], qfmt: str, afmt: str, css: st
 
 def _deck(did: int, name: str, now: int) -> dict:
     return {"id": did, "name": name, "mod": now, "usn": -1, "lrnToday": [0, 0], "revToday": [0, 0], "newToday": [0, 0],
-            "timeToday": [0, 0], "collapsed": False, "browserCollapsed": False, "desc": "Made with Hanabi.", "dyn": 0,
+            "timeToday": [0, 0], "collapsed": False, "browserCollapsed": False, "desc": "Made with Shuinkan.", "dyn": 0,
             "conf": 1, "extendNew": 0, "extendRev": 0}
 
 
@@ -113,9 +113,9 @@ def build_apkg(deck_name: str, notes: list[dict]) -> bytes:
     mids = {"kanji": 1_700_000_000_001, "basic": 1_700_000_000_002}  # fixed per note type so re-imports match
     models = {}
     if any(n["kind"] == "kanji" for n in notes):
-        models[str(mids["kanji"])] = _model(mids["kanji"], "Hanabi Kanji", KANJI_FIELDS, KANJI_FRONT, KANJI_BACK, KANJI_CSS, did, now)
+        models[str(mids["kanji"])] = _model(mids["kanji"], "Shuinkan Kanji", KANJI_FIELDS, KANJI_FRONT, KANJI_BACK, KANJI_CSS, did, now)
     if any(n["kind"] == "basic" for n in notes) or not models:
-        models[str(mids["basic"])] = _model(mids["basic"], "Hanabi Basic", BASIC_FIELDS, "{{Front}}",
+        models[str(mids["basic"])] = _model(mids["basic"], "Shuinkan Basic", BASIC_FIELDS, "{{Front}}",
                                             "{{FrontSide}}\n<hr id=answer>\n{{Back}}{{#Extra}}<br><br><small>{{Extra}}</small>{{/Extra}}",
                                             ".card { font-family: sans-serif; font-size: 24px; text-align: center; white-space: pre-wrap; }", did, now)
     decks = {"1": _deck(1, "Default", now), str(did): _deck(did, deck_name, now)}
@@ -193,7 +193,7 @@ def _open_collection(src, tmp: Path) -> sqlite3.Connection:
         try:
             import zstandard
         except ImportError:
-            raise ImportError_("This package uses Anki's newest format; reinstall Hanabi to add support for it.") from None
+            raise ImportError_("This package uses Anki's newest format; reinstall Shuinkan to add support for it.") from None
         raw = z.read("collection.anki21b")
         target.write_bytes(zstandard.ZstdDecompressor().decompressobj().decompress(raw))
     elif "collection.anki21" in names:

@@ -1,11 +1,11 @@
-# PyInstaller recipe: builds dist/Hanabi/Hanabi(.exe) — a folder with Python and everything Hanabi needs.
-# Build:  pyinstaller packaging/windows/hanabi.spec --noconfirm
+# PyInstaller recipe: builds dist/Shuinkan/Shuinkan(.exe) — a folder with Python and everything Shuinkan needs.
+# Build:  pyinstaller packaging/windows/shuinkan.spec --noconfirm
 import os
 from PyInstaller.utils.hooks import collect_submodules
 
 ROOT = os.path.abspath(os.path.join(SPECPATH, "..", ".."))
 R = lambda *p: os.path.join(ROOT, *p)
-ICON = R("packaging", "windows", "hanabi.ico")
+ICON = R("packaging", "windows", "shuinkan.ico")
 
 a = Analysis(
     [R("app", "desktop.py")],
@@ -18,6 +18,6 @@ a = Analysis(
     noarchive=False,
 )
 pyz = PYZ(a.pure)
-exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name="Hanabi", console=False, upx=False,
+exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name="Shuinkan", console=False, upx=False,
           icon=ICON if os.path.exists(ICON) else None, version=None)
-coll = COLLECT(exe, a.binaries, a.datas, name="Hanabi", upx=False)
+coll = COLLECT(exe, a.binaries, a.datas, name="Shuinkan", upx=False)

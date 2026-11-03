@@ -45,15 +45,15 @@ jobs:
         run: ./scripts/build_appimage.sh
       - uses: actions/upload-artifact@v4
         with:
-          name: Hanabi-AppImage
-          path: dist/Hanabi-*-x86_64.AppImage
+          name: Shuinkan-AppImage
+          path: dist/Shuinkan-*-x86_64.AppImage
       - name: Attach to release (tags only)
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" --title "Hanabi $GITHUB_REF_NAME" --generate-notes || true
-          gh release upload "$GITHUB_REF_NAME" dist/Hanabi-*-x86_64.AppImage data/content.db --clobber
+          gh release create "$GITHUB_REF_NAME" --title "Shuinkan $GITHUB_REF_NAME" --generate-notes || true
+          gh release upload "$GITHUB_REF_NAME" dist/Shuinkan-*-x86_64.AppImage data/content.db --clobber
 
   windows:
     needs: test
@@ -74,42 +74,42 @@ jobs:
         run: python -m pip install -r requirements.txt -r requirements-dev.txt pyinstaller pillow
       - name: Tests (on Windows)
         run: python -m pytest -q
-      - name: Build Hanabi.exe
-        run: pyinstaller packaging/windows/hanabi.spec --noconfirm
+      - name: Build Shuinkan.exe
+        run: pyinstaller packaging/windows/shuinkan.spec --noconfirm
       - name: Smoke test (start, load a page, stop)
         run: |
           $env:LOCALAPPDATA = "$env:RUNNER_TEMP\appdata"
-          Start-Process -FilePath dist\Hanabi\Hanabi.exe -ArgumentList "--browser"
+          Start-Process -FilePath dist\Shuinkan\Shuinkan.exe -ArgumentList "--browser"
           $ok = $false
           for ($i = 0; $i -lt 60; $i++) {
             try { $r = Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8000/login; if ($r.StatusCode -eq 200) { $ok = $true; break } } catch {}
             Start-Sleep -Seconds 2
           }
-          Get-Content "$env:LOCALAPPDATA\Hanabi\hanabi.log" -ErrorAction SilentlyContinue
-          if (-not $ok) { throw "Hanabi.exe did not start" }
-          & dist\Hanabi\Hanabi.exe --stop
+          Get-Content "$env:LOCALAPPDATA\Shuinkan\shuinkan.log" -ErrorAction SilentlyContinue
+          if (-not $ok) { throw "Shuinkan.exe did not start" }
+          & dist\Shuinkan\Shuinkan.exe --stop
           Start-Sleep -Seconds 4
       - name: Portable zip + installer
         run: |
           $v = (Select-String -Path app\desktop.py -Pattern '^VERSION = "(.*)"').Matches[0].Groups[1].Value
-          Compress-Archive -Path dist\Hanabi -DestinationPath "dist\Hanabi-$v-windows-portable.zip"
+          Compress-Archive -Path dist\Shuinkan -DestinationPath "dist\Shuinkan-$v-windows-portable.zip"
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress | Out-Null }
-          & $iscc "/DVersion=$v" packaging\windows\hanabi.iss
+          & $iscc "/DVersion=$v" packaging\windows\shuinkan.iss
           Get-ChildItem dist\*.exe, dist\*.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: Hanabi-Windows
+          name: Shuinkan-Windows
           path: |
-            dist/Hanabi-Setup-*.exe
-            dist/Hanabi-*-windows-portable.zip
+            dist/Shuinkan-Setup-*.exe
+            dist/Shuinkan-*-windows-portable.zip
       - name: Attach to release (tags only)
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$env:GITHUB_REF_NAME" --title "Hanabi $env:GITHUB_REF_NAME" --generate-notes 2>$null
-          gh release upload "$env:GITHUB_REF_NAME" (Get-ChildItem dist\Hanabi-Setup-*.exe).FullName (Get-ChildItem dist\Hanabi-*-windows-portable.zip).FullName --clobber
+          gh release create "$env:GITHUB_REF_NAME" --title "Shuinkan $env:GITHUB_REF_NAME" --generate-notes 2>$null
+          gh release upload "$env:GITHUB_REF_NAME" (Get-ChildItem dist\Shuinkan-Setup-*.exe).FullName (Get-ChildItem dist\Shuinkan-*-windows-portable.zip).FullName --clobber
 
   android:
     needs: test
@@ -130,7 +130,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.11.1"
-      - name: Stage Hanabi into the Android project
+      - name: Stage Shuinkan into the Android project
         run: ./scripts/stage_android.sh
       - name: Build APK
         env:
@@ -139,12 +139,12 @@ jobs:
       - name: Name the APK
         run: |
           V=$(sed -n 's/^VERSION = "\(.*\)"/\1/p' app/desktop.py)
-          mkdir -p dist && cp android/app/build/outputs/apk/release/*.apk "dist/Hanabi-$V-android.apk"
+          mkdir -p dist && cp android/app/build/outputs/apk/release/*.apk "dist/Shuinkan-$V-android.apk"
           ls -la dist
       - uses: actions/upload-artifact@v4
         with:
-          name: Hanabi-Android
-          path: dist/Hanabi-*-android.apk
+          name: Shuinkan-Android
+          path: dist/Shuinkan-*-android.apk
       - name: Enable KVM (for the emulator)
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -169,5 +169,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" --title "Hanabi $GITHUB_REF_NAME" --generate-notes || true
-          gh release upload "$GITHUB_REF_NAME" dist/Hanabi-*-android.apk --clobber
+          gh release create "$GITHUB_REF_NAME" --title "Shuinkan $GITHUB_REF_NAME" --generate-notes || true
+          gh release upload "$GITHUB_REF_NAME" dist/Shuinkan-*-android.apk --clobber

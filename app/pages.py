@@ -89,7 +89,7 @@ def register(request: Request, username: str = Form(""), email: str = Form(""), 
                 uid = c.execute(db.users.insert().values(username=username, email=email, display_name=(display_name or username)[:64],
                                                          password_hash=hash_password(password), created_at=int(time.time()))).inserted_primary_key[0]
                 c.execute(db.settings.insert().values(user_id=uid, timezone=valid_tz(timezone)))
-                gamify.log(c, uid, "account", "Joined Hanabi 🎆")
+                gamify.log(c, uid, "account", "Joined Shuinkan 🎉")
                 tok, _ = create_session(c, uid)
         if not errors:
             resp = redirect("/dashboard?welcome=1")
@@ -127,12 +127,12 @@ def login(request: Request, login: str = Form(""), password: str = Form(""), nex
 @router.post("/logout")
 def logout(request: Request, csrf: str = Form("")):
     check_csrf(request, csrf)
-    tok = request.cookies.get("hanabi_session")
+    tok = request.cookies.get("shuinkan_session")
     if tok:
         with db.tx() as c:
             c.execute(delete(db.sessions).where(db.sessions.c.id_hash == token_hash(tok)))
     resp = redirect("/")
-    resp.delete_cookie("hanabi_session", path="/")
+    resp.delete_cookie("shuinkan_session", path="/")
     return resp
 
 
@@ -142,18 +142,18 @@ def forgot_form(request: Request):
 
 
 def send_reset_email(to: str, link: str) -> bool:
-    host = os.environ.get("HANABI_SMTP_HOST")
+    host = os.environ.get("SHUINKAN_SMTP_HOST")
     if not host:
         return False
     msg = EmailMessage()
-    msg["Subject"] = "Reset your Hanabi password"
-    msg["From"] = os.environ.get("HANABI_SMTP_FROM", "no-reply@localhost")
+    msg["Subject"] = "Reset your Shuinkan password"
+    msg["From"] = os.environ.get("SHUINKAN_SMTP_FROM", "no-reply@localhost")
     msg["To"] = to
-    msg.set_content(f"Someone asked to reset your Hanabi password.\n\nUse this link within 1 hour:\n{link}\n\nIf it wasn't you, ignore this email.")
-    with smtplib.SMTP(host, int(os.environ.get("HANABI_SMTP_PORT", "587")), timeout=10) as s:
+    msg.set_content(f"Someone asked to reset your Shuinkan password.\n\nUse this link within 1 hour:\n{link}\n\nIf it wasn't you, ignore this email.")
+    with smtplib.SMTP(host, int(os.environ.get("SHUINKAN_SMTP_PORT", "587")), timeout=10) as s:
         s.starttls()
-        if os.environ.get("HANABI_SMTP_USER"):
-            s.login(os.environ["HANABI_SMTP_USER"], os.environ.get("HANABI_SMTP_PASSWORD", ""))
+        if os.environ.get("SHUINKAN_SMTP_USER"):
+            s.login(os.environ["SHUINKAN_SMTP_USER"], os.environ.get("SHUINKAN_SMTP_PASSWORD", ""))
         s.send_message(msg)
     return True
 
@@ -537,7 +537,7 @@ def achievements_page(request: Request):
 # ----------------------------------------------------------------- settings
 # id -> (name, meaning, light swatch, dark swatch); must match the palettes in static/css/app.css
 PALETTES = {
-    "hanabi": ("Hanabi", "花火 fireworks", "#cc3f26", "#ff6a4d"),
+    "shuinkan": ("Shuinkan", "朱 vermilion", "#cc3f26", "#ff6a4d"),
     "sakura": ("Sakura", "桜 cherry blossom", "#c9457c", "#ff8cba"),
     "matcha": ("Matcha", "抹茶 green tea", "#3d7f3a", "#86cf78"),
     "ai": ("Ai", "藍 indigo", "#2f55c4", "#86a2ff"),
@@ -572,8 +572,8 @@ async def settings_save(request: Request):
             errors.append(f"{key.replace('_', ' ').capitalize()} must be between {lo} and {hi}.")
             continue
         vals[key] = int(v)
-    pal = form.get("palette", "hanabi")
-    vals["palette"] = pal if pal in PALETTES else "hanabi"
+    pal = form.get("palette", "shuinkan")
+    vals["palette"] = pal if pal in PALETTES else "shuinkan"
     theme = form.get("theme", "system")
     vals["theme"] = theme if theme in ("system", "light", "dark") else "system"
     for flag in ("show_romaji", "show_jlpt", "calm_mode", "celebrations", "anki_autoplay"):

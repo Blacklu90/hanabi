@@ -10,11 +10,11 @@ import threading
 import time
 from collections import defaultdict, deque
 
-DEV = os.environ.get("HANABI_DEV", "1") == "1"
-SECURE_COOKIES = os.environ.get("HANABI_SECURE_COOKIES", "0" if DEV else "1") == "1"
-SESSION_COOKIE = "hanabi_session"
-SESSION_DAYS = int(os.environ.get("HANABI_SESSION_DAYS", "30"))
-ALLOWED_ORIGINS = {o.strip() for o in os.environ.get("HANABI_ALLOWED_ORIGINS", "").split(",") if o.strip()}
+DEV = os.environ.get("SHUINKAN_DEV", "1") == "1"
+SECURE_COOKIES = os.environ.get("SHUINKAN_SECURE_COOKIES", "0" if DEV else "1") == "1"
+SESSION_COOKIE = "shuinkan_session"
+SESSION_DAYS = int(os.environ.get("SHUINKAN_SESSION_DAYS", "30"))
+ALLOWED_ORIGINS = {o.strip() for o in os.environ.get("SHUINKAN_ALLOWED_ORIGINS", "").split(",") if o.strip()}
 
 _N, _R, _P = 2 ** 14, 8, 1
 

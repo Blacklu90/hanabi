@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Hanabi</string>
-    <string name="starting">Starting Hanabi…</string>
+    <string name="app_name">Shuinkan</string>
+    <string name="starting">Starting Shuinkan…</string>
     <string name="first_start">Setting up for the first time (about a minute)…</string>
 </resources>

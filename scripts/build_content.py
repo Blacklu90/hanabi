@@ -1,4 +1,4 @@
-"""Build Hanabi's read-only content tables from the original datasets.
+"""Build Shuinkan's read-only content tables from the original datasets.
 
 Sources (see DATA_SOURCES.md):
   data/source/kanjidic2-en-*.json        KANJIDIC2 (EDRDG, CC BY-SA 4.0) via jmdict-simplified
