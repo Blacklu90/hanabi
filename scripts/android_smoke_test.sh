@@ -18,6 +18,8 @@ adb exec-out screencap -p > "$OUT/1-start.png" || true
 if [ $ok = 1 ]; then python3 scripts/android_smoke_check.py 8765 || ok=0; fi
 sleep 4; adb exec-out screencap -p > "$OUT/2-after.png" || true
 adb logcat -d > "$OUT/logcat.txt" || true
-echo "----- app log (python / shuinkan / crashes) -----"
-grep -iE "python\.std|chaquopy|shuinkan|AndroidRuntime|FATAL" "$OUT/logcat.txt" | tail -150 || true
+echo "----- Python output -----"
+grep -E "python\.std" "$OUT/logcat.txt" | tail -300 || true
+echo "----- crashes -----"
+grep -E "AndroidRuntime|FATAL|chaquopy" "$OUT/logcat.txt" | tail -80 || true
 [ $ok = 1 ] || { echo "Shuinkan did not start or failed checks on the emulator"; exit 1; }
