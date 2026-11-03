@@ -146,3 +146,22 @@ document.addEventListener('submit', (e) => {
   if (b) setTimeout(() => b.classList.add('is-busy'), 0);
 });
 window.addEventListener('pageshow', (e) => { if (e.persisted) $$('.is-busy').forEach(b => b.classList.remove('is-busy')); });
+
+// ---------------------------------------------------------------- Android app
+// Inside the Android app, colour the status and navigation bars like the page (theme, palette, dark mode).
+export const android = window.ShuinkanAndroid || null;
+function syncBars() {
+  if (!android) return;
+  const bg = getComputedStyle(document.body).backgroundColor.match(/\d+/g);
+  if (!bg) return;
+  const [r, g, b] = bg.map(Number);
+  const hex = '#' + [r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('');
+  const dark = (0.299 * r + 0.587 * g + 0.114 * b) < 128;
+  try { android.setBars(hex, dark); } catch { /* older app */ }
+}
+if (android) {
+  document.documentElement.classList.add('in-android');
+  syncBars();
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncBars);
+  new MutationObserver(syncBars).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-palette'] });
+}

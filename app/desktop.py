@@ -32,7 +32,7 @@ import time
 import urllib.request
 from pathlib import Path
 
-VERSION = "1.0.1"
+VERSION = "1.1.0"
 WINDOWS = os.name == "nt"
 FROZEN = getattr(sys, "frozen", False)  # running from the packaged Windows .exe (PyInstaller)
 APP_ROOT = Path(getattr(sys, "_MEIPASS", "")) if FROZEN else Path(__file__).resolve().parent.parent

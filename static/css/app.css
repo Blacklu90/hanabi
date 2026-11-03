@@ -617,3 +617,14 @@ footer a { color: var(--muted); }
 .sync-history { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
 .sync-grid [data-host-result], .sync-grid [data-join-result] { margin-top: 12px; }
 .btn.block { width: 100%; justify-content: center; }
+
+/* ------------------------------------------------------------ touch screens */
+@media (pointer: coarse) {
+  .btn, .chip, .icon-btn, .nav a, .tabbar a, .menu-pop button, .menu-pop a { min-height: 44px; }
+  .btn.sm { min-height: 40px; }
+  .rate .btn { min-height: 56px; }
+  input, select, textarea { font-size: 16px; }
+  a, button { -webkit-tap-highlight-color: transparent; }
+}
+.in-android body { overscroll-behavior: none; }
+.guess [data-g-rows].center { text-align: center; }

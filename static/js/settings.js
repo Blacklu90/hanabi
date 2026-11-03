@@ -13,3 +13,25 @@ $('[name=calm_mode]', form).addEventListener('change', (e) => { document.documen
 $('[data-tz-detect]', form).addEventListener('click', () => {
   try { $('[data-tz-field]', form).value = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { /* ignore */ }
 });
+
+// Daily reminder (Android app only; saved on the phone straight away)
+import('./app.js').then(({ android }) => {
+  const box = document.querySelector('[data-android-only]');
+  if (!android || !box || !android.getReminder) return;
+  box.hidden = false;
+  const on = box.querySelector('[data-remind-on]'), time = box.querySelector('[data-remind-time]'), note = box.querySelector('[data-remind-note]');
+  const load = () => {
+    const r = JSON.parse(android.getReminder());
+    on.checked = r.enabled;
+    time.value = `${String(r.hour).padStart(2, '0')}:${String(r.minute).padStart(2, '0')}`;
+  };
+  const save = () => {
+    const [h, m] = (time.value || '19:00').split(':').map(Number);
+    android.setReminder(on.checked, h, m);
+    note.textContent = on.checked ? `Reminder set for ${time.value} every day.` : 'Reminder is off.';
+  };
+  load();
+  on.addEventListener('change', save);
+  time.addEventListener('change', () => { if (on.checked) save(); });
+  window.addEventListener('reminderchange', load);
+});

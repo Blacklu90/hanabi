@@ -27,6 +27,11 @@
     <label class="check"><input type="checkbox" name="anki_autoplay" value="1" {% if user.anki_autoplay %}checked{% endif %}> Play audio from imported Anki decks automatically (like Anki; press R to replay)</label>
     <div class="field"><label for="timezone">Time zone (for streaks and daily goals)</label><input id="timezone" name="timezone" type="text" value="{{ user.timezone }}" data-tz-field><div class="hint">e.g. Europe/Berlin. <button class="btn ghost sm" type="button" data-tz-detect>Use this device's</button></div></div>
   </div>
+  <div class="card" data-android-only hidden><h2>Daily reminder</h2>
+    <label class="check"><input type="checkbox" data-remind-on> Remind me once a day when something is waiting</label>
+    <div class="field"><label for="remind-time">Time</label><input id="remind-time" type="time" value="19:00" data-remind-time></div>
+    <div class="hint" data-remind-note>Only shows up when you have reviews due or new words waiting. Android may move it by a few minutes to save battery.</div>
+  </div>
   <div class="card"><h2>Mastery rules</h2><p class="small muted">An item counts as <b>mastered</b> only when all three are true. Opening a card never counts.</p>
     <div class="field"><label for="mastery_accuracy">Accuracy at least <b data-out="mastery_accuracy">{{ user.mastery_accuracy }}</b>%</label><input id="mastery_accuracy" name="mastery_accuracy" type="range" min="70" max="100" value="{{ user.mastery_accuracy }}"></div>
     <div class="field"><label for="mastery_reps">Correct in a row: <b data-out="mastery_reps">{{ user.mastery_reps }}</b></label><input id="mastery_reps" name="mastery_reps" type="range" min="1" max="10" value="{{ user.mastery_reps }}"></div>
