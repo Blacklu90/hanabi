@@ -24,3 +24,11 @@ packaging/arch/pkg/
 packaging/arch/src/
 packaging/arch/squashfs-root/
 packaging/arch/*.pkg.tar.*
+
+# Android: staged copies (made by scripts/stage_android.sh) and build output
+android/app/src/main/python/app/
+android/app/src/main/assets/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties

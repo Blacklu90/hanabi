@@ -1,4 +1,4 @@
-# 日本語 Hanabi — Japanese in short, focused bursts (Linux & Windows)
+# 日本語 Hanabi — Japanese in short, focused bursts (Linux, Windows & Android)
 
 [![CI](https://github.com/Blacklu90/hanabi/actions/workflows/ci.yml/badge.svg)](https://github.com/Blacklu90/hanabi/actions/workflows/ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/Blacklu90/hanabi)](https://github.com/Blacklu90/hanabi/releases/latest)
@@ -24,6 +24,16 @@ Hanabi is a complete Japanese-learning web app: hiragana, katakana, vocabulary, 
 Hanabi opens in its **own window** if you have a Chromium-based browser (Chromium, Chrome, Brave, Vivaldi or Edge). Closing the window stops Hanabi. Without one, it opens in your default browser. Python is bundled, so there's nothing else to install. On very new distros without `libfuse2`, run it with `--appimage-extract-and-run` or install `fuse2`.
 
 Your progress lives in `~/.local/share/hanabi/` and is kept across updates. To update, download the new AppImage (and run `--install` again if you use the menu entry). Other commands: `--browser` (open in your normal browser), `--stop`, `--uninstall` (keeps your progress), `--version`.
+
+## Install on Android
+
+1. On your phone, download **`Hanabi-<version>-android.apk`** from the [Releases](https://github.com/Blacklu90/hanabi/releases/latest) page.
+2. Open it. Android will ask you to allow installing apps from your browser or file manager: allow it, then tap **Install**.
+3. Open **Hanabi**. The first start takes about a minute while it sets up the kanji and dictionary data. After that it opens in a few seconds.
+
+Everything runs **on the phone, offline**: the full Hanabi app (Python) is inside the APK via [Chaquopy](https://chaquo.com/chaquopy/). Your progress stays on the phone. Import Anki decks from **Decks → Import from Anki** (pick an `.apkg` file); exports are saved to your **Downloads** folder. Needs Android 7.0 or newer (64-bit).
+
+> The APK is signed with the project's own published key (not Google Play), so Android may warn that it's from an unknown source. Updates install over the old version and keep your progress.
 
 ## Install on Windows
 
@@ -61,7 +71,7 @@ The first run builds the kanji and dictionary database from KANJIDIC2, JMdict an
 ./scripts/build_appimage.sh                                       # makes dist/Hanabi-<version>-x86_64.AppImage
 ```
 
-GitHub Actions does this automatically. Every push runs the tests on Linux and Windows and builds the AppImage, the Windows installer and the portable zip. Pushing a tag like `v1.0.0` publishes a release with all three attached.
+GitHub Actions does this automatically. Every push runs the tests on Linux and Windows and builds the AppImage, the Windows installer, the portable zip and the Android APK. The APK is also started in an Android emulator and checked. Pushing a tag like `v1.0.0` publishes a release with everything attached.
 
 ## How it helps you study
 
@@ -143,6 +153,7 @@ data/       content.db (shipped content: kanji, words, dictionary; replaced on u
             strokes/ (KanjiVG SVGs), content_report.json
 scripts/    build_content.py, fetch_sources.sh, build_appimage.sh, benchmark.py
 packaging/  hanabi.desktop, hanabi.png, arch/PKGBUILD, windows/ (PyInstaller recipe, Inno Setup installer, icon)
+android/    Android app: Kotlin WebView shell + Chaquopy (Python); scripts/stage_android.sh copies the app in
 .github/    CI: tests on every push; AppImage on version tags
 tests/      pytest suite
 ```

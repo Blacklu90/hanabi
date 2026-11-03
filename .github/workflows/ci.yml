@@ -110,3 +110,64 @@ jobs:
         run: |
           gh release create "$env:GITHUB_REF_NAME" --title "Hanabi $env:GITHUB_REF_NAME" --generate-notes 2>$null
           gh release upload "$env:GITHUB_REF_NAME" (Get-ChildItem dist\Hanabi-Setup-*.exe).FullName (Get-ChildItem dist\Hanabi-*-windows-portable.zip).FullName --clobber
+
+  android:
+    needs: test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: content-db
+          path: data
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.11.1"
+      - name: Stage Hanabi into the Android project
+        run: ./scripts/stage_android.sh
+      - name: Build APK
+        env:
+          CHAQUOPY_BUILD_PYTHON: python3
+        run: gradle -p android assembleRelease --stacktrace --no-daemon
+      - name: Name the APK
+        run: |
+          V=$(sed -n 's/^VERSION = "\(.*\)"/\1/p' app/desktop.py)
+          mkdir -p dist && cp android/app/build/outputs/apk/release/*.apk "dist/Hanabi-$V-android.apk"
+          ls -la dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Hanabi-Android
+          path: dist/Hanabi-*-android.apk
+      - name: Enable KVM (for the emulator)
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run it in an Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          script: ./scripts/android_smoke_test.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-smoke
+          path: android-smoke/
+      - name: Attach to release (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --title "Hanabi $GITHUB_REF_NAME" --generate-notes || true
+          gh release upload "$GITHUB_REF_NAME" dist/Hanabi-*-android.apk --clobber

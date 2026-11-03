@@ -1,0 +1,8 @@
+# Installed into the Android app by Chaquopy (Python for Android). Versions are left to the resolver
+# so it can pick builds that exist for Android (pydantic-core comes from Chaquopy's package index).
+fastapi
+uvicorn
+SQLAlchemy
+Jinja2
+python-multipart
+tzdata
