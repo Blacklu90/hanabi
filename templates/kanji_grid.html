@@ -1,0 +1,22 @@
+{% extends "base.html" %}{% block title %}My kanji grid{% endblock %}
+{% block content %}
+<div class="page-head"><div class="eyebrow">漢字 · what you can read</div><h1>My kanji grid</h1>
+<p>Every Jōyō kanji. The coloured ones are kanji you've met in words you study — you learned to read them just by learning words.</p></div>
+{% set here = '/kanji/grid' %}{% include "_kanji_tabs.html" %}
+<div class="row between" style="margin-bottom:12px">
+  <p class="small" style="margin:0"><b>{{ n_known }}</b> known · <b>{{ n_met - n_known }}</b> learning · {{ total - n_met }} not met yet</p>
+  <div class="chips" aria-label="Group by">
+    <a class="chip" href="?by=grade" aria-pressed="{{ 'true' if by == 'grade' else 'false' }}">School grade</a>
+    <a class="chip" href="?by=freq" aria-pressed="{{ 'true' if by == 'freq' else 'false' }}">Frequency</a>
+    {% if user.show_jlpt %}<a class="chip" href="?by=jlpt" aria-pressed="{{ 'true' if by == 'jlpt' else 'false' }}">Old JLPT</a>{% endif %}
+  </div>
+</div>
+<p class="tiny muted legend"><span class="kg-cell known">字</span> known (a word or card with it passed a review) <span class="kg-cell learning">字</span> learning <span class="kg-cell">字</span> not met yet</p>
+{% for g in groups %}
+<section class="card kg-group">
+  <div class="row between"><h2 style="margin:0">{{ g.title }}</h2><span class="small muted">{{ g.known }} known · {{ g.met }} met · {{ g.kanji|length }} total</span></div>
+  <div class="meter thin" aria-hidden="true"><span style="width:{{ (100 * g.met / g.kanji|length)|round(1) if g.kanji else 0 }}%"></span></div>
+  <div class="kg" lang="ja">{% for k in g.kanji %}<a class="kg-cell {{ known.get(k.char, '') }}" href="/kanji/{{ k.char }}" title="{{ k.char }} · {{ k.meanings.split('; ')[0] }}{{ ' · ' ~ known.get(k.char) if known.get(k.char) else '' }}">{{ k.char }}</a>{% endfor %}</div>
+</section>
+{% endfor %}
+{% endblock %}

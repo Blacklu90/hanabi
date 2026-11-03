@@ -522,3 +522,72 @@ footer a { color: var(--muted); }
 @media (min-width: 861px) { footer { padding-bottom: 28px; } }
 
 @media print { .top, .tabbar, footer { display: none; } }
+
+/* ---------------------------------------------------- kanji through words */
+.kanji-tabs { margin: 0 0 18px; }
+.chip[aria-current="page"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.stat-row .stat .lbl { font: 650 .8rem var(--sans); color: var(--muted); }
+.stat-row .stat .val { font: 750 1.9rem var(--sans); color: var(--ink); line-height: 1.2; }
+.add-words { margin-top: 16px; }
+.furi { font-family: var(--serif); font-size: 1.55rem; line-height: 2.1; color: var(--ink); }
+.furi rt { font: 500 .62rem var(--sans); color: var(--muted); letter-spacing: .02em; }
+.word-list { display: grid; gap: 4px; margin-top: 10px; }
+.word-row { display: grid; grid-template-columns: minmax(150px, 1fr) 2fr auto; gap: 6px 18px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.word-row:first-child { border-top: 0; }
+.wr-main { display: flex; flex-direction: column; }
+.wr-hint { grid-column: 1 / -1; margin: 0; }
+.wr-add { justify-self: end; }
+.kb { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.kb li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding: 2px 6px; border-radius: 8px; }
+.kb li.hl { background: var(--accent-soft); }
+.kb-char { font: 600 1.25rem var(--serif); color: var(--ink); text-decoration: none; min-width: 1.3em; }
+.kb-char:hover { color: var(--accent); }
+.kind { font: 700 .68rem var(--sans); text-transform: uppercase; letter-spacing: .05em; padding: 2px 7px; border-radius: 999px; background: var(--bg-2); color: var(--muted); }
+.kind-on { background: var(--indigo-soft); color: var(--indigo); }
+.kind-kun { background: var(--good-soft); color: var(--good); }
+.kind-special { background: var(--gold-soft); color: var(--gold); }
+.link-card { text-decoration: none; color: inherit; display: block; }
+.link-card:hover { border-color: var(--accent); }
+.link-card h3 { margin: 0 0 4px; }
+.writing-opt summary { cursor: pointer; list-style: none; }
+.writing-opt summary::-webkit-details-marker { display: none; }
+.writing-opt summary::before { content: "▸ "; color: var(--muted); }
+.writing-opt[open] summary::before { content: "▾ "; }
+.writing-opt[open] summary { margin-bottom: 12px; }
+/* review back */
+.word-back { margin-top: 12px; text-align: left; max-width: 520px; margin-inline: auto; }
+.reveal .reading .furi { font-size: 1.7rem; }
+.kw-list { list-style: none; padding: 0; margin: 4px 0 0; display: grid; gap: 2px; font-size: .92rem; }
+.g-sentence { margin-top: 10px; }
+.g-sentence .sentence-jp { margin: 0; }
+/* guess */
+.guess { text-align: center; padding: 28px 18px; }
+.guess .glyph.word { font-size: clamp(2.6rem, 9vw, 4.2rem); }
+.guess-form { justify-content: center; margin: 14px 0 8px; }
+.guess-form input { max-width: 260px; font-size: 1.2rem; text-align: center; }
+.clues { text-align: left; max-width: 520px; margin: 10px auto 0; }
+.clues p { margin: 4px 0; }
+.g-verdict { font: 750 1.2rem var(--sans); margin: 6px 0; }
+.g-verdict.ok { color: var(--good); }
+.g-verdict.no { color: var(--bad); }
+.guess [data-g-rows] { max-width: 520px; margin: 8px auto; text-align: left; }
+.center { text-align: center; }
+/* kanji grid */
+.legend { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
+.kg-group { margin-bottom: 14px; }
+.kg-group .meter { margin: 10px 0; }
+.kg { display: flex; flex-wrap: wrap; gap: 3px; }
+.kg-cell { display: inline-grid; place-items: center; width: 1.9em; height: 1.9em; font: 500 1.05rem var(--serif); color: var(--muted); background: var(--bg-2); border-radius: 5px; text-decoration: none; opacity: .55; }
+.kg-cell.learning { background: var(--gold-soft); color: var(--ink); opacity: 1; }
+.kg-cell.known { background: var(--good-soft); color: var(--ink); opacity: 1; font-weight: 650; }
+.kg-cell:hover { outline: 2px solid var(--accent); opacity: 1; }
+/* reading guide */
+.prose h2 { margin-top: 0; }
+.ex-list { display: grid; gap: 8px; margin-top: 8px; }
+.ex { padding: 6px 0; border-top: 1px solid var(--line); }
+.ex:first-child { border-top: 0; }
+.ex-w .furi { font-size: 1.35rem; line-height: 1.9; }
+@media (max-width: 640px) {
+  .word-row { grid-template-columns: 1fr; }
+  .wr-add { justify-self: start; }
+}

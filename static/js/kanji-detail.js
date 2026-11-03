@@ -34,3 +34,6 @@ nf?.addEventListener('submit', async (e) => {
   } catch (err) { st.textContent = err.message; }
 });
 nf?.addEventListener('input', () => { $('[data-note-status]', nf).textContent = 'Not saved yet'; });
+
+// "+ Study this word" in the words list
+import('./words-ui.js').then((m) => m.wireAddWord());

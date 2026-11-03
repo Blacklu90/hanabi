@@ -6,17 +6,16 @@ import re
 import random
 import secrets
 import time
-from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import Response
-from pydantic import AfterValidator, BaseModel, Field
+from pydantic import BaseModel, Field
 from sqlalchemy import and_, case, delete, func, or_, select, update
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
-from . import apkg, cards, content, db, gamify, quiz, srs
+from . import apkg, cards, content, db, gamify, quiz, readings, srs, words
 from .security import limiter
-from .kana import NON_SYLLABLE, SCRIPTS, to_hiragana, to_katakana
+from .kana import NON_SYLLABLE, SCRIPTS, romaji_to_hiragana, to_hiragana, to_katakana
 from .web import api_csrf, err, mastery_cfg, ok, require_user
 
 router = APIRouter(prefix="/api")
@@ -34,14 +33,13 @@ def finish_up(c, u) -> dict:
 
 # ------------------------------------------------------------------ lessons
 
-def _length(lo: int, hi: int):
-    """List length limit, checked in Python. (Field(min_length=…) on a list isn't supported by every
-    pydantic-core build: the Android one refuses to start with it.)"""
-    def check(v):
-        if not lo <= len(v) <= hi:
-            raise ValueError(f"expected {lo}–{hi} items, got {len(v)}")
-        return v
-    return check
+def _bad_length(v: list, lo: int, hi: int):
+    """List length limit, checked here rather than in the model: the Android build runs pydantic 1, which
+    doesn't support pydantic 2's list constraints."""
+    if not lo <= len(v) <= hi:
+        return err(f"Expected {lo}–{hi} items, got {len(v)}.", 422)
+    return None
+
 
 class LessonIn(BaseModel):
     lesson: str = Field(max_length=32)
@@ -69,11 +67,13 @@ def lesson_complete(body: LessonIn, u=Depends(require_user)):
 # ------------------------------------------------------------- flashcards
 class AddIn(BaseModel):
     track: str
-    items: Annotated[list[str], AfterValidator(_length(1, 200))]
+    items: list[str]
 
 
 @router.post("/srs/add", dependencies=W)
 def srs_add(body: AddIn, u=Depends(require_user)):
+    if (bad := _bad_length(body.items, 1, 200)):
+        return bad
     if body.track not in content.TRACKS:
         return err("Unknown track.")
     bad = [i for i in body.items if not content.valid_item(body.track, i)]
@@ -135,7 +135,7 @@ def review_undo(body: UndoIn, u=Depends(require_user)):
 
 
 class CardIdsIn(BaseModel):
-    ids: Annotated[list[int], AfterValidator(_length(1, 5000))]
+    ids: list[int]
 
 
 def _own_ids(c, uid, ids):
@@ -146,6 +146,8 @@ def _own_ids(c, uid, ids):
 @router.post("/cards/{action}", dependencies=W)
 def card_action(action: str, body: CardIdsIn, deck_id: int = 0, u=Depends(require_user)):
     """Anki card actions: suspend, unsuspend, bury, forget (reset to new), move (to deck_id), delete."""
+    if (bad := _bad_length(body.ids, 1, 5000)):
+        return bad
     now = int(time.time())
     sc = db.srs_cards.c
     with db.tx() as c:
@@ -253,13 +255,15 @@ def deck_delete(did: int, u=Depends(require_user)):
 
 
 class AddKanjiIn(BaseModel):
-    chars: Annotated[list[str], AfterValidator(_length(0, 2136))] = Field(default_factory=list)
+    chars: list[str] = Field(default_factory=list)
     grade: int = 0
 
 
 @router.post("/decks/{did}/kanji", dependencies=W)
 def deck_add_kanji(did: int, body: AddKanjiIn, u=Depends(require_user)):
     """Add kanji to a deck as new cards (by list, or a whole school grade). Kanji already in another deck stay there."""
+    if (bad := _bad_length(body.chars, 0, 2136)):
+        return bad
     if body.grade:
         chars = [k["char"] for k in content.kanji_list() if k["grade"] == body.grade]
     else:
@@ -849,3 +853,89 @@ def dict_manage(did: int, action: str, u=Depends(require_user)):
         else:
             return err("Unknown action.", 404)
     return ok()
+
+
+# ------------------------------------------------------- kanji through words
+class WordsAddIn(BaseModel):
+    count: int = Field(20, ge=1, le=200)
+    ids: list[int] = Field(default_factory=list)
+    deck: int = 0
+
+
+@router.post("/words/add", dependencies=W)
+def words_add(body: WordsAddIn, u=Depends(require_user)):
+    """Add the next words of the course (or chosen words) to a deck. The deck's daily limit paces new cards."""
+    if (bad := _bad_length(body.ids, 0, 200)):
+        return bad
+    now = int(time.time())
+    with db.tx() as c:
+        have = set(words.user_word_ids(c, u["id"]))
+        pick = [words.get(i) for i in body.ids] if body.ids else words.next_words(have, body.count)
+        pick = [w for w in pick if w and w["id"] not in have]
+        if not pick:
+            return err("Those words are already in your decks.")
+        did = body.deck if body.deck and _own_deck(c, u["id"], body.deck) else srs.get_or_create_deck(c, u["id"], words.DECK_NAME)
+        added = sum(srs.add_card(c, u["id"], "dict", str(w["id"]), now, deck_id=did, position=w["n"]) for w in pick)
+        if added:
+            gamify.log(c, u["id"], "kanji", f"Added {added} word{'s' if added != 1 else ''} to study")
+        name = c.execute(select(db.decks.c.name).where(db.decks.c.id == did)).scalar()
+        tail = finish_up(c, u)
+    return ok(added=added, deck=name, deck_id=did, **tail)
+
+
+def _clues(c, uid: int, w: dict) -> list[dict]:
+    """For each kanji in the word: a word you already study that uses it, and the reading it has there."""
+    have = words.user_word_ids(c, uid)
+    mine = [x for x in (words.get(i) for i in have) if x]
+    mine.sort(key=lambda x: (have[x["id"]]["state"] not in ("review", "mastered"), x["n"]))
+    out = []
+    for ch in w["kanji"]:
+        for x in mine:
+            if ch in x["kanji"]:
+                part = next((p for p in readings.analyse(x["word"], x["reading"])["parts"] if p["text"] == ch), None)
+                out.append({"char": ch, "word": x["word"], "reading": x["reading"], "part": part["reading"] if part else "",
+                            "kind": readings.KIND_LABELS.get(part["kind"], "") if part else ""})
+                break
+        else:
+            k = content.kanji_get(ch)
+            out.append({"char": ch, "word": "", "reading": "", "part": "", "kind": "",
+                        "readings": " · ".join(x for x in (k["onyomi"], k["kunyomi"]) if x) if k else ""})
+    return out
+
+
+@router.get("/guess/next")
+def guess_next(skip: str = "", u=Depends(require_user)):
+    exclude = {int(x) for x in skip.split(",")[:100] if x.isdigit()}
+    with db.ro() as c:
+        known = words.known_kanji(c, u["id"])
+        have = set(words.user_word_ids(c, u["id"]))
+        w = words.pick_guess(known, have, exclude)
+        if w is None:
+            return ok(word=None, known=len(known))
+        clues = _clues(c, u["id"], w)
+    return ok(id=w["id"], word=w["word"], meaning=w["meaning"], clues=clues, known=len(known))
+
+
+class GuessIn(BaseModel):
+    id: int
+    answer: str = Field(max_length=60)
+
+
+@router.post("/guess/answer", dependencies=W)
+def guess_answer(body: GuessIn, u=Depends(require_user)):
+    w = words.get(body.id)
+    if not w:
+        return err("Word not found.", 404)
+    ans = body.answer.strip().replace(" ", "")
+    if not ans:
+        return err("Type the reading first (kana or romaji).")
+    guess = romaji_to_hiragana(ans.lower()) if ans.isascii() else to_hiragana(ans)
+    correct = guess == to_hiragana(w["reading"])
+    b = words.breakdown(w["word"], w["reading"])
+    with db.tx() as c:
+        xp = gamify.award(c, u["id"], "game", f"guess:{w['id']}", 2, u["timezone"]) if correct else 0
+        in_deck = w["id"] in words.user_word_ids(c, u["id"])
+        tail = finish_up(c, u)
+    return ok(correct=correct, guess=guess or ans, reading=w["reading"], word=w["word"], meaning=w["meaning"],
+              parts=b["parts"], kanji=b["kanji"], hint=b["hint"]["text"], sentence_jp=w["jp"], sentence_en=w["en"],
+              in_deck=in_deck, xp=xp, **tail)

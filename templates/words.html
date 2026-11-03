@@ -1,0 +1,37 @@
+{% extends "base.html" %}{% from "_words.html" import word_row %}{% block title %}Kanji through words{% endblock %}
+{% block content %}
+<div class="page-head"><div class="eyebrow">漢字 · learn them in words</div><h1>Kanji through words</h1>
+<p>You don't have to memorise every reading of every kanji first. Learn common words, and each kanji comes with the reading it really has in that word. Read as much as you can alongside — reading is what makes them stick.</p></div>
+{% set here = '/words' %}{% include "_kanji_tabs.html" %}
+
+<div class="grid g3 stat-row">
+  <div class="card stat"><div class="lbl">Words you're studying</div><div class="val">{{ in_course }}</div><div class="tiny muted">of {{ "{:,}".format(total) }} common words</div></div>
+  <div class="card stat"><div class="lbl">Kanji you've met</div><div class="val">{{ kanji_met }}</div><div class="tiny muted">of {{ "{:,}".format(kanji_total) }} Jōyō kanji · <a href="/kanji/grid">see the grid</a></div></div>
+  <div class="card stat"><div class="lbl">Words you know</div><div class="val">{{ learned }}</div><div class="tiny muted">passed at least one review</div></div>
+</div>
+
+<form class="card add-words" data-add-words>
+  <h2 style="margin-top:0">Add the next words</h2>
+  <p class="small muted" style="margin-top:0">Words come in order: the most common kanji first, each with a few useful words that only use kanji you've already met. Your deck's “new cards per day” setting paces them, so adding 100 at once is fine.</p>
+  <div class="row">
+    <label class="sr" for="aw-deck">Deck</label>
+    <select id="aw-deck" name="deck">{% if not deck %}<option value="0">{{ 'Kanji words' }} (new deck)</option>{% endif %}{% for d in decks %}<option value="{{ d.id }}"{% if deck and d.id == deck.id %} selected{% endif %}>{{ d.name }}</option>{% endfor %}</select>
+    {% for n in (20, 50, 100) %}<button class="btn {{ 'primary' if n == 20 else '' }}" type="submit" name="count" value="{{ n }}">+ {{ n }} words</button>{% endfor %}
+    {% if deck %}<a class="btn ghost" href="/review?deck={{ deck.id }}">Study them →</a>{% endif %}
+  </div>
+  <p class="small" data-aw-status aria-live="polite"></p>
+</form>
+
+<div class="card" style="margin-top:16px">
+  <div class="row between"><h2 style="margin:0">Coming up next</h2><a class="small" href="/kanji/readings">How to guess readings →</a></div>
+  {% if upcoming %}<div class="word-list">{% for w in upcoming %}{{ word_row(w) }}{% endfor %}</div>
+  {% else %}<div class="empty">You've added every word in the course. Impressive! Keep reading real Japanese and add words from the <a href="/dictionary">dictionary</a>.</div>{% endif %}
+</div>
+
+<div class="grid g2" style="margin-top:16px">
+  <a class="card link-card" href="/guess"><h3>推 Guess the reading</h3><p class="small muted">See a word you haven't studied, built from kanji you already know, and work out how it's read.</p></a>
+  <a class="card link-card" href="/kanji/readings"><h3>音訓 How readings work</h3><p class="small muted">On'yomi, kun'yomi, and the patterns that tell you which one a word probably uses.</p></a>
+</div>
+<p class="tiny muted" style="margin-top:14px">Words, readings and example sentences: JMdict and Tatoeba. Kanji readings: KANJIDIC2. Want to write kanji too? Stroke order is still on every kanji's page and in Practice — it's optional here.</p>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/words.js') }}"></script>{% endblock %}

@@ -16,7 +16,7 @@
 <body class="{% block body_class %}{% endblock %}"{% if user %} data-celebrate="{{ user.celebrations }}" data-romaji="{{ user.show_romaji }}" data-autoplay="{{ user.anki_autoplay }}"{% endif %}>
 <a class="skip" href="#main">Skip to content</a>
 {% set nav = [
-  ('/dashboard', 'Home', '⌂', 'dashboard'), ('/learn/hiragana', 'Learn', 'あ', 'learn'), ('/kanji', 'Kanji', '字', 'kanji'),
+  ('/dashboard', 'Home', '⌂', 'dashboard'), ('/learn/hiragana', 'Learn', 'あ', 'learn'), ('/words', 'Kanji', '字', 'kanji'),
   ('/review', 'Review', '↻', 'review'), ('/quiz', 'Practice', '?', 'quiz'), ('/decks', 'Decks', '束', 'decks'),
   ('/dictionary', 'Dictionary', '辞', 'dictionary')] %}
 <header class="top">

@@ -1,5 +1,6 @@
 // Flashcard review (Anki-style): reveal, rate 1–4 (each button shows its next interval),
 // undo the last answer, bury/suspend, and edit your own notes. The server schedules everything.
+import { furigana, h, kanjiRows } from './words-ui.js';
 import { $, $$, api, burstActive, reward, sparks, toast } from './app.js';
 
 const root = $('[data-review]');
@@ -89,6 +90,7 @@ if (root) {
     const isKana = c.track === 'hiragana' || c.track === 'katakana';
     el.reading.textContent = (c.track === 'kanji' || c.track === 'dict') ? (c.reading || '') : (!isKana && showRomaji ? (c.reading || '') : '');
     el.extra.textContent = c.extra || '';
+    showWordBack(c);
     el.hook.hidden = !c.hook;
     el.hookText.textContent = c.hook || '';
     const mine = [c.my_mnemonic, c.my_notes].filter(Boolean).join(' — ');
@@ -257,4 +259,22 @@ if (root) {
     else if (e.key === '@') { e.preventDefault(); act('suspend'); }
   });
   render();
+}
+
+// Words: furigana + which reading each kanji uses + an example. Kanji cards: real words that use the kanji.
+function showWordBack(c) {
+  const box = $('[data-wordback]'), rows = $('[data-wb-rows]'), hint = $('[data-wb-hint]'), sent = $('[data-wb-sentence]');
+  const reading = $('[data-reading]');
+  rows.replaceChildren(); sent.replaceChildren(); hint.textContent = '';
+  let any = false;
+  if (c.parts) { reading.replaceChildren(furigana(c.parts)); any = true; }
+  if (c.kanji?.length) { rows.append(kanjiRows(c.kanji)); any = true; }
+  if (c.hint) { hint.textContent = c.hint; any = true; }
+  if (c.words?.length) {
+    const ul = h('ul', 'kw-list');
+    for (const w of c.words) { const li = h('li'); li.append(h('span', 'jp', w.word), ' ', h('span', 'jp muted', w.reading), ' — ', w.meaning); ul.append(li); }
+    rows.append(h('p', 'tiny muted', 'In words:'), ul); any = true;
+  }
+  if (c.sentence_jp) { sent.append(h('p', 'sentence-jp', c.sentence_jp), h('p', 'small muted', c.sentence_en || '')); any = true; }
+  box.hidden = !any;
 }

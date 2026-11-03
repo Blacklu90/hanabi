@@ -26,6 +26,12 @@ jobs:
           python -m scripts.build_content
       - name: Tests
         run: python -m pytest -q
+      - name: Tests with the Android app's library versions (Chaquopy has pydantic 1 only)
+        run: |
+          python -m venv /tmp/android-libs
+          /tmp/android-libs/bin/pip install -q "pydantic==1.10.27" "fastapi==0.125.0" "starlette==0.50.0" \
+            -r requirements-android.txt zstandard pytest httpx
+          /tmp/android-libs/bin/python -m pytest -q -p no:cacheprovider
       - uses: actions/upload-artifact@v4
         with:
           name: content-db

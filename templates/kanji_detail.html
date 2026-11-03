@@ -1,4 +1,4 @@
-{% extends "base.html" %}{% block title %}{{ k.char }} · {{ k.meanings.split('; ')[0] }}{% endblock %}
+{% extends "base.html" %}{% from "_words.html" import word_row %}{% block title %}{{ k.char }} · {{ k.meanings.split('; ')[0] }}{% endblock %}
 {% block content %}
 <div class="row between" style="margin-bottom:14px">
   <a class="btn ghost sm" href="/kanji">← Library</a>
@@ -34,7 +34,14 @@
   </div>
 </div>
 
-<form class="card my-notes" style="margin-top:22px" data-kanji-note data-item="{{ k.char }}">
+<section class="card" style="margin-top:22px">
+  <div class="row between"><h2 style="margin:0">Learn {{ k.char }} in words</h2><a class="small" href="/kanji/readings">How readings work →</a></div>
+  <p class="small muted" style="margin-top:4px">The reading {{ k.char }} has in each word is highlighted. Learning these words teaches you its readings in context.</p>
+  {% if course_words %}<div class="word-list">{% for w in course_words %}{{ word_row(w, k.char, True) }}{% endfor %}</div>
+  {% else %}<div class="empty small">No common words in the course use this kanji — it mostly appears in names or rarer words.</div>{% endif %}
+</section>
+
+<form class="card my-notes" style="margin-top:16px" data-kanji-note data-item="{{ k.char }}">
   <div class="row between"><h2 style="margin:0">✎ My notes</h2><span class="small muted" data-note-status aria-live="polite">{{ 'Saved' if note else 'Only you can see these. They also show on the back of the card.' }}</span></div>
   <div class="grid g3" style="margin-top:12px">
     <div><label for="km">My meaning</label><input id="km" name="meaning" type="text" maxlength="300" value="{{ note.meaning if note else '' }}" placeholder="{{ k.meanings.split('; ')[0] }}"></div>
@@ -45,13 +52,14 @@
 </form>
 
 <div class="grid g2" style="margin-top:16px">
-  <div class="card">
-    <h2>Stroke order</h2>
+  <details class="card writing-opt">
+    <summary><h2 style="display:inline">Writing <span class="small muted">(optional) · stroke order</span></h2></summary>
     <div class="stroke-box" style="max-width:300px;margin:0 auto" data-strokes="/strokes/{{ stroke }}" aria-label="Stroke order diagram for {{ k.char }}"></div>
     <div class="row" style="justify-content:center;margin-top:12px"><button class="btn sm" type="button" data-play>▶ Play</button><button class="btn sm" type="button" data-step-stroke>Step</button><button class="btn sm" type="button" data-reset-stroke>Reset</button><button class="icon-btn" type="button" data-nums aria-pressed="true" aria-label="Show stroke numbers">#</button></div>
-  </div>
+    <p class="tiny muted">You don't need to write kanji to read them. Come back to this whenever you want to.</p>
+  </details>
   <div class="card">
-    <h2>Words</h2>
+    <h2>More dictionary words</h2>
     {% if vocab %}{% for v in vocab %}<div class="vocab-item"><a class="w" href="/kanji?q={{ v.word|urlencode }}" data-wordlink>{{ v.word }}</a><span class="small"><b class="jp">{{ v.reading }}</b> — {{ v.meaning }}</span></div>{% endfor %}
     {% else %}<div class="empty small">No common dictionary words use this kanji on its own. It mostly shows up in names or rarer words.</div>{% endif %}
   </div>

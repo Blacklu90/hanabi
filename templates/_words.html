@@ -1,0 +1,25 @@
+{# Furigana word and per-kanji reading breakdown (data from app/words.py breakdown()). #}
+{% macro furi(parts) -%}
+<span class="furi" lang="ja">{% for p in parts %}{% if p.ruby %}<ruby>{{ p.text }}<rt>{{ p.ruby }}</rt></ruby>{% else %}{{ p.text }}{% endif %}{% endfor %}</span>
+{%- endmacro %}
+
+{% macro kanji_rows(rows, highlight='') -%}
+<ul class="kb">
+  {% for r in rows %}<li class="{{ 'hl' if r.char == highlight else '' }}">
+    <a class="kb-char jp" href="/kanji/{{ r.char }}" title="Open {{ r.char }}">{{ r.char }}</a>
+    {% if r.reading %}<b class="jp">{{ r.reading }}</b>{% endif %}
+    <span class="kind kind-{{ r.kind }}">{{ r.label }}</span>
+    {% if r.base %}<span class="tiny muted">from <span class="jp">{{ r.base }}</span>{% if r.change %} · {{ r.change }}{% endif %}</span>{% endif %}
+    <span class="small muted">{{ r.meaning }}</span>
+  </li>{% endfor %}
+</ul>
+{%- endmacro %}
+
+{% macro word_row(w, highlight='', add=False) -%}
+<div class="word-row">
+  <div class="wr-main">{{ furi(w.parts) }}<span class="small">{{ w.meaning }}</span></div>
+  {{ kanji_rows(w.kanji, highlight) }}
+  {% if w.hint and w.hint.text %}<p class="tiny muted wr-hint">{{ w.hint.text }}</p>{% endif %}
+  {% if add %}<div class="wr-add">{% if w.added %}<span class="pill good">In your deck</span>{% else %}<button class="btn sm" type="button" data-add-word="{{ w.id }}">+ Study this word</button>{% endif %}</div>{% endif %}
+</div>
+{%- endmacro %}

@@ -6,7 +6,7 @@ import time
 
 from sqlalchemy import select
 
-from . import content, db, srs
+from . import content, db, srs, words
 
 TRACK_LABELS = {**content.TRACKS, "card": "Card", "dict": "Word"}
 
@@ -20,10 +20,7 @@ def custom_view(row) -> dict:
 
 
 def dict_view(row) -> dict:
-    senses = json.loads(row.senses_json)
-    gl = "; ".join(senses[0]["g"][:3]) if senses else ""
-    return {"front": row.headword, "front_kind": "jp", "answer": gl, "reading": row.reading if row.reading != row.headword else "",
-            "meaning": gl, "extra": "Dictionary word", "stroke": None}
+    return words.card_view(row)
 
 
 def build(c, u, rows: list[dict], now: int | None = None) -> list[dict]:
@@ -57,6 +54,9 @@ def build(c, u, rows: list[dict], now: int | None = None) -> list[dict]:
             v = dict_view(row)
         else:
             v = content.card_view(t, item)
+            if t == "kanji":  # show the kanji at work in real words
+                v["words"] = [{"word": w["word"], "reading": w["reading"], "meaning": w["meaning"].split("; ")[0]}
+                              for w in words.for_kanji(item, 3)]
         note = notes.get((t, item))
         if note and note.meaning:
             v["answer"] = note.meaning

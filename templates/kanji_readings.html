@@ -1,0 +1,49 @@
+{% extends "base.html" %}{% from "_words.html" import furi %}{% block title %}How kanji readings work{% endblock %}
+{% macro examples(list) -%}
+<div class="ex-list">{% for w in list %}<div class="ex"><div class="ex-w">{{ furi(w.parts) }}</div><div class="tiny muted">{{ w.meaning.split('; ')[0] }}</div>
+<div class="tiny">{% for r in w.kanji %}<span class="jp">{{ r.char }}</span>{% if r.reading %} <span class="jp">{{ r.reading }}</span>{% endif %} <span class="kind kind-{{ r.kind }}">{{ r.label }}</span>{% if not loop.last %} · {% endif %}{% endfor %}</div></div>{% endfor %}</div>
+{%- endmacro %}
+{% block content %}
+<div class="page-head"><div class="eyebrow">音読み · 訓読み</div><h1>How kanji readings work</h1>
+<p>Most kanji have more than one reading, and no rule tells you for sure which one a word uses — in the end you learn it with the word. But a few patterns make a good guess much more likely.</p></div>
+{% set here = '/kanji/readings' %}{% include "_kanji_tabs.html" %}
+
+<div class="card prose">
+  <h2>Two kinds of reading</h2>
+  <p><b>On'yomi</b> (音読み, “sound reading”) came into Japanese with the kanji from Chinese. Dictionaries usually write it in katakana. <b>Kun'yomi</b> (訓読み) is a native Japanese word that was matched to the kanji's meaning; it's written in hiragana.</p>
+  <p>Every example on this page comes from the words course, and the readings are worked out from the dictionaries (JMdict and KANJIDIC2), not typed in by hand.</p>
+</div>
+
+<div class="grid g2" style="margin-top:16px">
+  <div class="card"><h2>Kanji compounds → usually on'yomi</h2>
+    <p class="small">Two or more kanji with no kana are often words that came from Chinese, read with on'yomi. In this course, <b>{{ totals.compound.pct }}%</b> of the {{ "{:,}".format(totals.compound.n) }} kanji-only words follow this.</p>
+    {{ examples(ex.on_compound) }}</div>
+  <div class="card"><h2>Kanji + kana ending → usually kun'yomi</h2>
+    <p class="small">When kana follow the kanji (okurigana, like the ぶ in 学ぶ), it's almost always a native Japanese word, read with kun'yomi. Here <b>{{ totals.okurigana.pct }}%</b> of the {{ "{:,}".format(totals.okurigana.n) }} such words follow it.</p>
+    {{ examples(ex.kun_okurigana) }}</div>
+</div>
+
+<div class="grid g2" style="margin-top:16px">
+  <div class="card"><h2>Sounds that change</h2>
+    <p class="small"><b>Voicing (rendaku):</b> the first sound of a later kanji often becomes voiced — か→が, さ→ざ, た→だ, は→ば.</p>
+    {{ examples(ex.voiced) }}
+    <p class="small" style="margin-top:12px"><b>Small っ:</b> a reading ending in く, き, ち or つ often shrinks to っ before the next sound.</p>
+    {{ examples(ex.sokuon) }}</div>
+  <div class="card"><h2>Exceptions you just have to know</h2>
+    <p class="small"><b>Compounds read with kun'yomi.</b> Native words can be written with two kanji too:</p>
+    {{ examples(ex.kun_compound) }}
+    <p class="small" style="margin-top:12px"><b>Special readings.</b> Some words have a reading for the whole word that doesn't split into the kanji's usual readings:</p>
+    {{ examples(ex.special) }}</div>
+</div>
+
+<div class="card prose" style="margin-top:16px">
+  <h2>So how do you get good at this?</h2>
+  <ul>
+    <li><b>Learn words, not reading lists.</b> Each word you learn teaches you the reading a kanji really has there. Start with the <a href="/words">words course</a>.</li>
+    <li><b>Read a lot.</b> The more words you've seen a kanji in, the better your guesses get for words you've never seen.</li>
+    <li><b>Practise guessing.</b> <a href="/guess">Guess the reading</a> shows you new words built from kanji you know.</li>
+    <li><b>When it matters, check.</b> Names of people and places break the patterns most often. The <a href="/dictionary">dictionary</a> is always one tap away.</li>
+  </ul>
+  <p class="small muted">Writing kanji by hand is a separate skill. If you want it, stroke order is on every kanji's page — but you don't need it to learn to read.</p>
+</div>
+{% endblock %}

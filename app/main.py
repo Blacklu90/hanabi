@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import re
+import threading
 import time
 from urllib.parse import urlsplit
 
@@ -91,8 +92,10 @@ def create_app() -> FastAPI:
                                "eagerness": "moderate"}]}
         return JSONResponse(rules, media_type="application/speculationrules+json", headers={"Cache-Control": "public, max-age=86400"})
 
-    from . import api, pages
+    from . import api, pages, words
     app.include_router(pages.router)
+    # Build the word course in the background so the first visit to /words is instant.
+    threading.Thread(target=words.course, name="warm-words", daemon=True).start()
     app.include_router(api.router)
 
     def wants_json(request: Request) -> bool:

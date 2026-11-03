@@ -14,7 +14,7 @@ from sqlalchemy import and_, delete, func, or_, select, update
 from . import content, db, gamify, quiz
 from .kana import SCRIPTS
 from .security import DEV, DUMMY_HASH, hash_password, limiter, new_token, token_hash, verify_password
-from . import cards, srs
+from . import cards, readings, srs, words
 from .web import (check_csrf, create_session, mastery_cfg, page_user, redirect, render, set_session_cookie, user_of)
 
 router = APIRouter()
@@ -352,6 +352,113 @@ def _radicals():
     return _RADICALS
 
 
+@router.get("/words")
+def words_course(request: Request):
+    """Kanji through words: the main way to learn kanji here."""
+    u = page_user(request)
+    with db.ro() as c:
+        have = words.user_word_ids(c, u["id"])
+        known = words.known_kanji(c, u["id"])
+        deck = c.execute(select(db.decks).where(db.decks.c.user_id == u["id"], db.decks.c.name == words.DECK_NAME)).first()
+        decks = c.execute(select(db.decks.c.id, db.decks.c.name).where(db.decks.c.user_id == u["id"]).order_by(db.decks.c.name)).all()
+    course = words.course()
+    upcoming = [{**w, **words.breakdown(w["word"], w["reading"])} for w in words.next_words(set(have), 12)]
+    in_course = sum(1 for i in have if words.get(i))
+    learned = sum(1 for i, r in have.items() if r["state"] in ("review", "mastered") and words.get(i))
+    return render(request, "words.html", {
+        "total": len(course), "in_course": in_course, "learned": learned, "upcoming": upcoming, "deck": deck, "decks": decks,
+        "kanji_known": sum(1 for v in known.values() if v == "known"), "kanji_met": len(known), "kanji_total": len(content.kanji_list()),
+    })
+
+
+@router.get("/guess")
+def guess_page(request: Request):
+    u = page_user(request)
+    with db.ro() as c:
+        met = len(words.known_kanji(c, u["id"]))
+    return render(request, "guess.html", {"met": met})
+
+
+@router.get("/kanji/grid")
+def kanji_grid(request: Request, by: str = "grade"):
+    """Every Jōyō kanji, coloured by whether you've met it in your words (like Anki's Kanji Grid add-on)."""
+    u = page_user(request)
+    with db.ro() as c:
+        known = words.known_kanji(c, u["id"])
+    ks = content.kanji_list()
+    if by == "freq":
+        ordered = sorted(ks, key=lambda k: k["freq"] or 9999)
+        groups = [(f"Most common {lo + 1}–{min(lo + 500, 2500)}" if lo < 2500 else "Less common", ordered[lo:lo + 500] if lo < 2000 else ordered[lo:])
+                  for lo in range(0, 2500, 500)]
+        groups = [(t, g) for t, g in groups if g]
+    elif by == "jlpt" and u["show_jlpt"]:
+        groups = [(f"Old JLPT level {n}", [k for k in ks if k["jlpt_old"] == n]) for n in (4, 3, 2, 1)]
+        groups.append(("Not on the old JLPT list", [k for k in ks if not k["jlpt_old"]]))
+    else:
+        by = "grade"
+        groups = [(label, [k for k in ks if k["grade"] == g]) for g, label in content.GRADE_LABELS.items()]
+    groups = [{"title": t, "kanji": g, "known": sum(1 for k in g if known.get(k["char"]) == "known"),
+               "met": sum(1 for k in g if k["char"] in known)} for t, g in groups]
+    return render(request, "kanji_grid.html", {"groups": groups, "known": known, "by": by,
+                                               "n_known": sum(1 for v in known.values() if v == "known"), "n_met": len(known),
+                                               "total": len(ks)})
+
+
+_GUIDE = None
+
+
+def _guide_examples():
+    """Real examples for the reading guide, taken from the start of the word course."""
+    global _GUIDE
+    if _GUIDE is None:
+        buckets = {k: [] for k in ("on_compound", "kun_okurigana", "kun_compound", "on_okurigana", "special", "voiced", "sokuon")}
+        totals = {"compound": [0, 0], "okurigana": [0, 0]}
+        for w in words.course():
+            a = readings.analyse(w["word"], w["reading"])
+            h = readings.hint(w["word"], w["reading"])
+            if h["rule"] in totals:
+                totals[h["rule"]][0] += 1
+                totals[h["rule"]][1] += bool(h["followed"])
+            kinds = {p["kind"] for p in a["parts"] if p["kind"] in ("on", "kun")}
+            key = None
+            if a["special"]:
+                key = "special"
+            elif any(p.get("change") == "small っ" for p in a["parts"]):
+                key = "sokuon"
+            elif any(p.get("change") == "voiced" for p in a["parts"]):
+                key = "voiced"
+            elif h["rule"] == "compound":
+                key = "on_compound" if kinds == {"on"} else ("kun_compound" if kinds == {"kun"} else None)
+            elif h["rule"] == "okurigana":
+                key = "kun_okurigana" if h["followed"] else "on_okurigana"
+            # Clean examples: guided-pass words, short, and (for special readings) kanji only.
+            if key == "special" and (not w.get("first") or len(w["word"]) > 2 or any(not readings.is_kanji(ch) for ch in w["word"])):
+                continue
+            if key and len(buckets[key]) < 6 and len(w["word"]) <= 4:
+                buckets[key].append({**w, **words.breakdown(w["word"], w["reading"])})
+        _GUIDE = {"ex": buckets, "totals": {k: {"n": n, "pct": round(100 * f / n) if n else 0} for k, (n, f) in totals.items()},
+                  "n_words": len(words.course())}
+    return _GUIDE
+
+
+@router.get("/kanji/readings")
+def kanji_readings_guide(request: Request):
+    page_user(request)
+    return render(request, "kanji_readings.html", _guide_examples())
+
+
+def _kanji_words(ch: str, uid: int) -> list[dict]:
+    ws = words.for_kanji(ch, 10)
+    with db.ro() as c:
+        have = words.user_word_ids(c, uid)
+    out = []
+    for w in ws:
+        b = words.breakdown(w["word"], w["reading"])
+        mine = next((r for r in b["kanji"] if r["char"] == ch), None)
+        out.append({**w, **b, "this": mine, "added": w["id"] in have})
+    return out
+
+
 @router.get("/kanji/{ch}")
 def kanji_detail(request: Request, ch: str):
     u = page_user(request)
@@ -372,6 +479,7 @@ def kanji_detail(request: Request, ch: str):
     ks = content.kanji_list()
     return render(request, "kanji_detail.html", {
         "k": k, "nanori": full.nanori, "kvg_strokes": full.kvg_strokes, "vocab": content.kanji_vocab(ch),
+        "course_words": _kanji_words(ch, u["id"]),
         "sentences": content.kanji_sentences(ch), "related": related[:10], "card": card._mapping if card else None,
         "prog": prog, "stroke": content.stroke_file(ch),
         "decks": decks, "note": note, "deck_name": dict(decks).get(card.deck_id) if card else None,

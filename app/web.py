@@ -21,7 +21,7 @@ from .security import DEV, SECURE_COOKIES, SESSION_COOKIE, SESSION_DAYS, new_tok
 ROOT = Path(os.environ.get("SHUINKAN_ROOT") or Path(__file__).resolve().parent.parent)
 STATIC = ROOT / "static"
 CSRF_COOKIE = "shuinkan_csrf"
-SECTIONS = {"vocab": "learn", "hooks": "learn", "write": "quiz", "match": "quiz", "browse": "decks"}
+SECTIONS = {"vocab": "learn", "hooks": "learn", "write": "quiz", "match": "quiz", "browse": "decks", "words": "kanji", "guess": "kanji"}
 
 templates = Jinja2Templates(directory=str(ROOT / "templates"))
 
