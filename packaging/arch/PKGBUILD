@@ -1,14 +1,13 @@
 # Arch Linux package for Hanabi (installs the release AppImage).
 # Build & install:  cd packaging/arch && makepkg -si
-# Before the first release, set _repo to your GitHub "owner/name".
 pkgname=hanabi-bin
 pkgver=1.0.0
 pkgrel=1
 pkgdesc="Learn Japanese in short, focused bursts: kana, all 2,136 Jōyō kanji, Anki-style decks, dictionary"
 arch=('x86_64')
-_repo="OWNER/hanabi"
+_repo="Blacklu90/hanabi"
 url="https://github.com/${_repo}"
-license=('custom')
+license=('MIT' 'CC-BY-SA-4.0')
 depends=('fuse2' 'zlib' 'glibc')
 optdepends=('chromium: open Hanabi in its own app window (any Chromium-based browser works)'
             'libnotify: "starting…" notification on first launch')

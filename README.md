@@ -1,4 +1,8 @@
-# 花火 Hanabi — Japanese in short, focused bursts
+# 日本語 Hanabi — Japanese in short, focused bursts
+
+[![CI](https://github.com/Blacklu90/hanabi/actions/workflows/ci.yml/badge.svg)](https://github.com/Blacklu90/hanabi/actions/workflows/ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/Blacklu90/hanabi)](https://github.com/Blacklu90/hanabi/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 Hanabi is a complete Japanese-learning web app: hiragana, katakana, vocabulary, and all **2,136 Jōyō kanji**. It's designed for people with ADHD, and for anyone who learns best in short sessions with clear next steps.
 
@@ -6,7 +10,7 @@ Hanabi is a complete Japanese-learning web app: hiragana, katakana, vocabulary, 
 
 ### AppImage (any distribution — easiest)
 
-1. Download `Hanabi-<version>-x86_64.AppImage` from the [Releases](../../releases) page.
+1. Download `Hanabi-<version>-x86_64.AppImage` from the [Releases](https://github.com/Blacklu90/hanabi/releases/latest) page.
 2. Make it runnable and start it:
    ```bash
    chmod +x Hanabi-*-x86_64.AppImage
@@ -32,7 +36,7 @@ This installs the release AppImage as the `hanabi` command, with a menu entry.
 ### From source (developers)
 
 ```bash
-git clone <this repo> hanabi && cd hanabi
+git clone https://github.com/Blacklu90/hanabi && cd hanabi
 ./run.sh            # or ./install.sh for a menu entry
 ```
 
@@ -140,6 +144,10 @@ tests/      pytest suite
 .venv/bin/python -m pytest -q          # 114 tests
 .venv/bin/python -m scripts.benchmark  # against a running server on :8765
 ```
+
+## License
+
+Hanabi's code is open source under the [MIT License](LICENSE). The bundled learning data (KANJIDIC2, JMdict, KanjiVG, Tatoeba) keeps its own licences. See [DATA_SOURCES.md](DATA_SOURCES.md).
 
 ## Data
 
