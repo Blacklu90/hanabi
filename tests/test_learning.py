@@ -275,3 +275,15 @@ def test_stats_count_past_one(user):
     with db.tx() as c:
         new = {a["code"] for a in gamify.check_achievements(c, uid, "UTC")}
     assert {"mastery_1", "mastery_5", "quiz_perfect"} <= new
+
+
+def test_time_zone_falls_back_without_tz_database(monkeypatch):
+    """Windows/Android may lack a time-zone database: streaks and goals must still work (in UTC)."""
+    import datetime as dt
+    from zoneinfo import ZoneInfoNotFoundError
+
+    def broken(key):
+        raise ZoneInfoNotFoundError(key)
+    monkeypatch.setattr(gamify, "ZoneInfo", broken)
+    assert gamify.tz_of("Europe/Berlin") is dt.timezone.utc
+    assert len(gamify.local_day("Asia/Tokyo")) == 10

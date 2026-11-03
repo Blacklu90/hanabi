@@ -4,3 +4,4 @@ SQLAlchemy==2.1.6
 Jinja2==3.1.6
 python-multipart==0.0.33
 zstandard==0.25.0
+tzdata==2026.6

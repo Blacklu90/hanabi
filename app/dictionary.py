@@ -63,6 +63,29 @@ def _fts_query(q: str) -> str | None:
     return " ".join(f'"{w}"' for w in words[:8])
 
 
+class _Row:
+    __slots__ = ("rowid", "gloss", "b")
+
+    def __init__(self, rowid, gloss, b):
+        self.rowid, self.gloss, self.b = rowid, gloss, b
+
+
+def _plain_gloss_search(c, ql: str) -> list:
+    """English search without FTS5: substring match on the stored meanings (slower, same ranking afterwards)."""
+    words = re.findall(r"[a-z0-9']+", ql)
+    if not words:
+        return []
+    de = db.dict_entries.c
+    cond = [de.senses_json.like(f"%{w}%") for w in words[:4]]
+    out = []
+    for r in c.execute(select(de.id, de.senses_json).where(*cond).order_by(de.common.desc(), func.length(de.senses_json)).limit(1500)):
+        glosses = [g for sn in json.loads(r.senses_json) for g in sn["g"]]
+        joined = " ; ".join(glosses)
+        if all(re.search(rf"\b{re.escape(w)}\b", joined.lower()) for w in words):
+            out.append(_Row(r.id, joined, len(joined) / 100))
+    return out
+
+
 def search(c, q: str, limit: int = 30) -> tuple[list[dict], int]:
     """Built-in dictionary. Returns (entries, total_found_upto_cap)."""
     q = q.strip()[:60]
@@ -96,17 +119,20 @@ def search(c, q: str, limit: int = 30) -> tuple[list[dict], int]:
     fq = None if JP.search(q) else _fts_query(q)
     if fq:
         ql = _unparen(q)
-        rows = c.execute(text("SELECT rowid, gloss, bm25(dict_fts) AS b FROM dict_fts WHERE dict_fts MATCH :q ORDER BY b LIMIT 400"), {"q": fq}).all()
-        # Everyday words have many meanings, which lowers their text score; also take entries whose
-        # first meaning *starts* with the query ("water" -> 水, "go" -> 行く "to go").
-        phrase = " ".join(re.findall(r"[a-z0-9']+", ql))
-        seen_ids = {r.rowid for r in rows}
-        for start in dict.fromkeys([phrase, f"to {phrase}"]):
-            for r in c.execute(text("SELECT rowid, gloss, bm25(dict_fts) AS b FROM dict_fts WHERE dict_fts MATCH :q LIMIT 300"),
-                               {"q": f'gloss : ^"{start}"'}).all():
-                if r.rowid not in seen_ids:
-                    seen_ids.add(r.rowid)
-                    rows.append(r)
+        if db.HAS_FTS:
+            rows = c.execute(text("SELECT rowid, gloss, bm25(dict_fts) AS b FROM dict_fts WHERE dict_fts MATCH :q ORDER BY b LIMIT 400"), {"q": fq}).all()
+            # Everyday words have many meanings, which lowers their text score; also take entries whose
+            # first meaning *starts* with the query ("water" -> 水, "go" -> 行く "to go").
+            phrase = " ".join(re.findall(r"[a-z0-9']+", ql))
+            seen_ids = {r.rowid for r in rows}
+            for start in dict.fromkeys([phrase, f"to {phrase}"]):
+                for r in c.execute(text("SELECT rowid, gloss, bm25(dict_fts) AS b FROM dict_fts WHERE dict_fts MATCH :q LIMIT 300"),
+                                   {"q": f'gloss : ^"{start}"'}).all():
+                    if r.rowid not in seen_ids:
+                        seen_ids.add(r.rowid)
+                        rows.append(r)
+        else:
+            rows = _plain_gloss_search(c, ql)
         commons = dict(c.execute(select(de.id, de.common).where(de.id.in_([r.rowid for r in rows]))).all()) if rows else {}
         for r in rows:
             glosses = [_unparen(g) for g in r.gloss.split(" ; ")]

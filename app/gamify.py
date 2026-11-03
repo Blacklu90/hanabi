@@ -20,11 +20,12 @@ DAILY_ACTIVITY_CAP = 300
 CAPPED_SOURCES = ("quiz", "game", "writing", "burst", "review")
 
 
-def tz_of(tzname: str | None) -> ZoneInfo:
+def tz_of(tzname: str | None) -> dt.tzinfo:
+    """The user's time zone; UTC if unknown or if this system has no time-zone database."""
     try:
         return ZoneInfo(tzname or "UTC")
     except Exception:
-        return ZoneInfo("UTC")
+        return dt.timezone.utc
 
 
 def local_day(tzname: str | None, ts: float | None = None) -> str:

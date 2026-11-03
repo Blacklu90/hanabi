@@ -99,3 +99,10 @@ def test_import_csv_tsv_and_errors(user):
 def test_flatten_structured_content():
     node = {"tag": "div", "content": [{"tag": "span", "content": "a"}, {"tag": "ruby", "content": ["漢", {"tag": "rt", "content": "かん"}]}]}
     assert dictionary._flatten(node).strip() == "a漢"
+
+
+@pytest.mark.parametrize("q,expect", [("cat", "猫"), ("dog", "犬"), ("eat", "食べる"), ("water", "水"), ("to run", "走る")])
+def test_english_search_without_fts5(user, monkeypatch, q, expect):
+    """Some SQLite builds (Android) have no FTS5: English search must still work (plain substring search)."""
+    monkeypatch.setattr(db, "HAS_FTS", False)
+    assert expect in heads(user, q, 5)

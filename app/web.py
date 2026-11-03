@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import os
 import time
 from pathlib import Path
 
@@ -17,7 +18,7 @@ from . import content, db, gamify
 from .kana import SCRIPTS
 from .security import DEV, SECURE_COOKIES, SESSION_COOKIE, SESSION_DAYS, new_token, token_hash
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(os.environ.get("HANABI_ROOT") or Path(__file__).resolve().parent.parent)
 STATIC = ROOT / "static"
 CSRF_COOKIE = "hanabi_csrf"
 SECTIONS = {"vocab": "learn", "hooks": "learn", "write": "quiz", "match": "quiz", "browse": "decks"}

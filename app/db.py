@@ -11,7 +11,8 @@ from sqlalchemy import (
     UniqueConstraint, create_engine, event, text,
 )
 
-ROOT = Path(__file__).resolve().parent.parent
+# Where templates/, static/ and data/ live. Overridable for packaged builds (Android copies them to app storage).
+ROOT = Path(os.environ.get("HANABI_ROOT") or Path(__file__).resolve().parent.parent)
 DB_PATH = Path(os.environ.get("HANABI_DB", ROOT / "data" / "hanabi.db"))            # your account + progress
 CONTENT_DB = Path(os.environ.get("HANABI_CONTENT_DB", ROOT / "data" / "content.db"))  # shipped learning content
 
@@ -428,13 +429,23 @@ def init_db(eng=None) -> None:
         for v in range(1, SCHEMA_VERSION + 1):
             if c.execute(text("SELECT 1 FROM schema_migrations WHERE version=:v"), {"v": v}).first() is None:
                 c.execute(schema_migrations.insert().values(version=v, applied_at=int(time.time())))
-        # English search over the dictionary (FTS5, rowid = JMdict id). Built by build_content.
-        c.execute(text(FTS_DDL))
+        # English search over the dictionary (FTS5, rowid = JMdict id). Some SQLite builds (e.g. on Android)
+        # lack FTS5; then the dictionary falls back to a plain search (see dictionary.py).
+        global HAS_FTS
+        try:
+            c.execute(text("SAVEPOINT fts"))
+            c.execute(text(FTS_DDL))
+            c.execute(text("RELEASE fts"))
+            HAS_FTS = True
+        except Exception:
+            c.execute(text("ROLLBACK TO fts"))
+            HAS_FTS = False
     sync_content(eng)
     with eng.begin() as c:
         c.execute(text("PRAGMA optimize"))
 
 
+HAS_FTS = True
 FTS_DDL = "CREATE VIRTUAL TABLE IF NOT EXISTS dict_fts USING fts5(gloss, tokenize='unicode61 remove_diacritics 2')"
 
 
@@ -461,8 +472,9 @@ def sync_content(eng, src: Path | None = None) -> bool:
                 cols = ", ".join(f'"{c.name}"' for c in t.columns)
                 cur.execute(f'DELETE FROM main."{t.name}"')
                 cur.execute(f'INSERT INTO main."{t.name}" ({cols}) SELECT {cols} FROM src."{t.name}"')
-            cur.execute("DELETE FROM main.dict_fts")
-            if cur.execute("SELECT 1 FROM src.sqlite_master WHERE name='dict_fts'").fetchone():
+            if HAS_FTS:
+                cur.execute("DELETE FROM main.dict_fts")
+            if HAS_FTS and cur.execute("SELECT 1 FROM src.sqlite_master WHERE name='dict_fts'").fetchone():
                 cur.execute("INSERT INTO main.dict_fts(rowid, gloss) SELECT rowid, gloss FROM src.dict_fts")
             cur.execute("COMMIT")
             return True
