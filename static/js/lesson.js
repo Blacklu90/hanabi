@@ -124,3 +124,6 @@ document.addEventListener('keydown', (e) => {
   }
 });
 showStep(0);
+
+// "+ Study" on the words this lesson unlocked
+import('./words-ui.js').then((m) => m.wireAddWord());

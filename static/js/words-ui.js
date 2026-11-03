@@ -33,11 +33,28 @@ export function wireAddWord(root = document) {
     if (!btn) return;
     btn.disabled = true;
     try {
-      const r = await api('/api/words/add', { ids: [Number(btn.dataset.addWord)] });
+      const r = await api(btn.dataset.addUrl || '/api/words/add', { ids: [Number(btn.dataset.addWord)] });
       const pill = h('span', 'pill good', `Added to ${r.deck}`);
       btn.replaceWith(pill);
       reward(r);
     } catch (err) { btn.disabled = false; toast(err.message, 'err'); }
   });
+}
+export function kanaRows(rows) {
+  const box = h('span', 'ku-list');
+  for (const r of rows || []) {
+    const u = h('span', 'ku' + (r.note ? ' ku-note' : ''));
+    if (r.note) u.title = r.note;
+    const b = h('b', '', r.kana); b.lang = 'ja';
+    u.append(b, h('small', '', r.romaji || '·'));
+    box.append(u);
+  }
+  return box;
+}
+
+export function kanaNotes(rows) {
+  const box = h('div');
+  for (const r of rows || []) if (r.note) { const d = h('div', 'tiny muted'); d.append(h('span', 'jp', r.kana), `: ${r.note}`); box.append(d); }
+  return box;
 }
 export { h };

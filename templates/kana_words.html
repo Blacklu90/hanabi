@@ -1,0 +1,38 @@
+{% extends "base.html" %}{% from "_kana_words.html" import kana_word_row %}{% block title %}{{ sc.label }} words{% endblock %}
+{% block content %}
+<div class="page-head"><div class="eyebrow">{{ sc.jp }} · learn them in words</div><h1>{{ sc.label }} through words</h1>
+<p>Start reading real words as soon as you know their {{ sc.label|lower }}. Every lesson unlocks a few words that only use the characters you've learned, so each new character gets used straight away.</p></div>
+{% set here = '/learn/' ~ script ~ '/words' %}{% include "_kana_tabs.html" %}
+
+<div class="grid g3 stat-row">
+  <div class="card stat"><div class="lbl">{{ sc.label }} you know</div><div class="val">{{ known }}</div><div class="tiny muted">of {{ n_chars }} · from your lessons and reviews</div></div>
+  <div class="card stat"><div class="lbl">Words you can read now</div><div class="val">{{ "{:,}".format(readable) }}</div><div class="tiny muted">of {{ "{:,}".format(total) }} common words</div></div>
+  <div class="card stat"><div class="lbl">Words you're studying</div><div class="val">{{ studying }}</div><div class="tiny muted">{{ learned }} passed a review</div></div>
+</div>
+
+<form class="card add-words" data-add-words data-url="/api/kana/{{ script }}/words/add">
+  <h2 style="margin-top:0">Add words you can read</h2>
+  <p class="small muted" style="margin-top:0">Only words made of {{ sc.label|lower }} you already know. Finish more <a href="/learn/{{ script }}">lessons</a> to unlock more. Your deck's “new cards per day” setting paces them.</p>
+  <div class="row">
+    <label class="sr" for="aw-deck">Deck</label>
+    <select id="aw-deck" name="deck">{% if not deck %}<option value="0">{{ deck_name }} (new deck)</option>{% endif %}{% for d in decks %}<option value="{{ d.id }}"{% if deck and d.id == deck.id %} selected{% endif %}>{{ d.name }}</option>{% endfor %}</select>
+    {% for n in (10, 20, 50) %}<button class="btn {{ 'primary' if n == 10 else '' }}" type="submit" name="count" value="{{ n }}"{% if not upcoming %} disabled{% endif %}>+ {{ n }} words</button>{% endfor %}
+    {% if deck %}<a class="btn ghost" href="/review?deck={{ deck.id }}">Study them →</a>{% endif %}
+  </div>
+  <p class="small" data-aw-status aria-live="polite"></p>
+</form>
+
+<div class="card" style="margin-top:16px">
+  <div class="row between"><h2 style="margin:0">Coming up next</h2><a class="small" href="/learn/{{ script }}/guide">How {{ sc.label|lower }} work →</a></div>
+  {% if upcoming %}<div class="word-list">{% for w in upcoming %}{{ kana_word_row(w, script) }}{% endfor %}</div>
+  {% elif known < 3 %}<div class="empty">Do your first <a href="/learn/{{ script }}/1">{{ sc.label }} lesson</a> and the first words unlock.</div>
+  {% else %}<div class="empty">You've added every word you can read so far. The <a href="/learn/{{ script }}">next lesson</a> unlocks more.</div>{% endif %}
+</div>
+
+<div class="grid g2" style="margin-top:16px">
+  <a class="card link-card" href="/learn/{{ script }}/read"><h3>読 Read it</h3><p class="small muted">Read words you haven't studied, made only of {{ sc.label|lower }} you know, and type what they say.</p></a>
+  <a class="card link-card" href="/learn/{{ script }}/guide"><h3>゛ How {{ sc.label|lower }} work</h3><p class="small muted">The marks and small characters that change a sound, with real examples.</p></a>
+</div>
+<p class="tiny muted" style="margin-top:14px">Words, meanings and sentences: JMdict and Tatoeba.{% if script == 'hiragana' %} Many of these words are usually written with kanji; you'll see that form on the card.{% endif %}</p>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/words.js') }}"></script>{% endblock %}

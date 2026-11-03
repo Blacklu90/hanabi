@@ -6,9 +6,9 @@ import time
 
 from sqlalchemy import select
 
-from . import content, db, srs, words
+from . import content, db, kana_words, srs, words
 
-TRACK_LABELS = {**content.TRACKS, "card": "Card", "dict": "Word"}
+TRACK_LABELS = {**content.TRACKS, "card": "Card", "dict": "Word", "hword": "Hiragana word", "kword": "Katakana word"}
 
 
 def custom_view(row) -> dict:
@@ -47,6 +47,10 @@ def build(c, u, rows: list[dict], now: int | None = None) -> list[dict]:
             if row is None:
                 continue
             v = custom_view(row)
+        elif t in ("hword", "kword"):
+            v = kana_words.card_view(kana_words.script_of_track(t), int(item))
+            if v is None:
+                continue
         elif t == "dict":
             row = dicts.get(int(item))
             if row is None:

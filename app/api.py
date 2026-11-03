@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import and_, case, delete, func, or_, select, update
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
-from . import apkg, cards, content, db, gamify, quiz, readings, srs, words
+from . import apkg, cards, content, db, gamify, kana_words, quiz, readings, srs, words
 from .security import limiter
 from .kana import NON_SYLLABLE, SCRIPTS, romaji_to_hiragana, to_hiragana, to_katakana
 from .web import api_csrf, err, mastery_cfg, ok, require_user
@@ -939,3 +939,120 @@ def guess_answer(body: GuessIn, u=Depends(require_user)):
     return ok(correct=correct, guess=guess or ans, reading=w["reading"], word=w["word"], meaning=w["meaning"],
               parts=b["parts"], kanji=b["kanji"], hint=b["hint"]["text"], sentence_jp=w["jp"], sentence_en=w["en"],
               in_deck=in_deck, xp=xp, **tail)
+
+
+# ------------------------------------------------------------ kana through words
+def _script_ok(script: str) -> bool:
+    return script in ("hiragana", "katakana")
+
+
+@router.post("/kana/{script}/words/add", dependencies=W)
+def kana_words_add(script: str, body: WordsAddIn, u=Depends(require_user)):
+    """Add the next words you can read (only kana you've learned) to a deck."""
+    if not _script_ok(script):
+        return err("Unknown script.", 404)
+    if (bad := _bad_length(body.ids, 0, 200)):
+        return bad
+    now = int(time.time())
+    t = kana_words.track(script)
+    with db.tx() as c:
+        have = set(kana_words.user_ids(c, u["id"], script))
+        known = kana_words.known_kana(c, u["id"], script)
+        if body.ids:
+            pick = [kana_words.get(script, i) for i in body.ids]
+        else:
+            pick = kana_words.next_words(script, known, have, body.count)
+        pick = [w for w in pick if w and w["id"] not in have]
+        if not pick:
+            return err("No new words you can read yet — finish the next lesson to unlock more." if not body.ids
+                       else "That word is already in your decks.")
+        name = "Hiragana words" if script == "hiragana" else "Katakana words"
+        did = body.deck if body.deck and _own_deck(c, u["id"], body.deck) else srs.get_or_create_deck(c, u["id"], name)
+        added = sum(srs.add_card(c, u["id"], t, str(w["id"]), now, deck_id=did, position=w["n"]) for w in pick)
+        if added:
+            gamify.log(c, u["id"], "srs", f"Added {added} {script} word{'s' if added != 1 else ''} to study")
+        deck_name = c.execute(select(db.decks.c.name).where(db.decks.c.id == did)).scalar()
+        tail = finish_up(c, u)
+    return ok(added=added, deck=deck_name, deck_id=did, **tail)
+
+
+@router.get("/kana/{script}/read/next")
+def kana_read_next(script: str, skip: str = "", u=Depends(require_user)):
+    if not _script_ok(script):
+        return err("Unknown script.", 404)
+    exclude = {int(x) for x in skip.split(",")[:100] if x.isdigit()}
+    with db.ro() as c:
+        known = kana_words.known_kana(c, u["id"], script)
+        have = set(kana_words.user_ids(c, u["id"], script))
+    w = kana_words.pick_read(script, known, have, exclude)
+    if w is None:
+        return ok(word=None, known=len(known))
+    return ok(id=w["id"], word=w["word"], known=len(known))
+
+
+class ReadIn(BaseModel):
+    id: int
+    answer: str = Field(max_length=60)
+
+
+@router.post("/kana/{script}/read/answer", dependencies=W)
+def kana_read_answer(script: str, body: ReadIn, u=Depends(require_user)):
+    if not _script_ok(script):
+        return err("Unknown script.", 404)
+    w = kana_words.get(script, body.id)
+    if not w:
+        return err("Word not found.", 404)
+    if not body.answer.strip():
+        return err("Type what you read (romaji or kana).")
+    correct = kana_words.answer_ok(body.answer, w["word"])
+    b = kana_words.breakdown(w["word"], script)
+    with db.tx() as c:
+        xp = gamify.award(c, u["id"], "game", f"read:{script}:{w['id']}", 1, u["timezone"]) if correct else 0
+        in_deck = w["id"] in kana_words.user_ids(c, u["id"], script)
+        tail = finish_up(c, u)
+    return ok(correct=correct, word=w["word"], romaji=b["romaji"], meaning=w["meaning"], written=w["written"],
+              rows=b["rows"], hint=" ".join(kana_words.NOTE_TEXT[n] for n in b["notes"]),
+              sentence_jp=w["jp"], sentence_en=w["en"], in_deck=in_deck, xp=xp, **tail)
+
+
+# ------------------------------------------------------------------ Wi-Fi sync
+@router.post("/sync/host", dependencies=W)
+def sync_host_start(u=Depends(require_user)):
+    """Show a one-time code and listen on the local network for a few minutes."""
+    from . import sync
+    try:
+        sync.start_host(u["id"])
+    except sync.SyncError as e:
+        return err(str(e), 503)
+    return ok(**sync.host_status(u["id"]))
+
+
+@router.get("/sync/host")
+def sync_host_status(u=Depends(require_user)):
+    from . import sync
+    st = sync.host_status(u["id"])
+    return ok(**(st or {"state": "off"}))
+
+
+@router.post("/sync/host/stop", dependencies=W)
+def sync_host_stop(u=Depends(require_user)):
+    from . import sync
+    sync.stop_host(u["id"])
+    return ok(state="off")
+
+
+class JoinIn(BaseModel):
+    address: str = Field(max_length=120)
+    code: str = Field(max_length=40)
+
+
+@router.post("/sync/join", dependencies=W)
+def sync_join(body: JoinIn, u=Depends(require_user)):
+    from . import sync
+    if not limiter.allow(f"syncjoin:{u['id']}", 10, 600):
+        return err("Too many tries. Wait a few minutes.", 429)
+    try:
+        r = sync.join(u["id"], body.address, body.code)
+    except sync.SyncError as e:
+        return err(str(e), 400)
+    return ok(**r)

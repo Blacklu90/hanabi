@@ -1,0 +1,45 @@
+{% extends "base.html" %}{% block title %}Sync devices{% endblock %}{% block wrap_class %}narrow{% endblock %}
+{% block content %}
+<div class="page-head"><div class="eyebrow">⇄ Wi-Fi sync</div><h1>Sync your phone and computer</h1>
+<p>Keep your progress the same on every device. Both devices need to be on the same Wi-Fi. Your data goes straight from one to the other, encrypted with the code. No internet server is involved.</p></div>
+
+<div class="grid g2 sync-grid">
+  <section class="card" data-host>
+    <h2>1 · On one device</h2>
+    <p class="small muted">Show a code, then type it on the other device.</p>
+    <div data-host-off>
+      <button class="btn primary lg block" type="button" data-host-start>Let another device connect</button>
+    </div>
+    <div data-host-on hidden>
+      <p class="eyebrow" style="margin:0">Code</p>
+      <p class="sync-code" data-code lang="en"></p>
+      <p class="eyebrow" style="margin:0">Address</p>
+      <p class="sync-addr" data-addr></p>
+      <p class="tiny muted">Waiting for the other device… <span data-left></span></p>
+      <button class="btn sm" type="button" data-host-stop>Cancel</button>
+    </div>
+    <div data-host-result hidden aria-live="polite"></div>
+  </section>
+
+  <form class="card" data-join>
+    <h2>2 · On the other device</h2>
+    <p class="small muted">Type the address and code shown on the first device.</p>
+    <div class="field"><label for="j-addr">Address</label><input id="j-addr" name="address" type="text" inputmode="url" placeholder="192.168.1.23:8770" autocomplete="off" required></div>
+    <div class="field"><label for="j-code">Code</label><input id="j-code" name="code" type="text" placeholder="K7Q4M-2XDHP" autocomplete="off" autocapitalize="characters" spellcheck="false" required></div>
+    <button class="btn primary lg block" type="submit">Sync now</button>
+    <div data-join-result hidden aria-live="polite"></div>
+  </form>
+</div>
+
+<section class="card" style="margin-top:16px">
+  <h2>What gets synced</h2>
+  <p class="small">Cards and their review history, decks, imported Anki decks (with images and audio), your notes, your dictionaries, lessons, quizzes, XP and achievements. When a card was studied on both devices, the most recent review wins. Nothing is ever deleted by a sync.</p>
+  <p class="small muted">Not synced: your password and profile, and display settings (theme, colours), which stay per device. On a computer, your firewall may ask once whether Shuinkan can use the network — allow it for private networks.</p>
+</section>
+
+{% if history %}<section class="card" style="margin-top:16px"><h2>Recent syncs</h2>
+<ul class="sync-history">{% for h in history %}<li><b>{{ h.peer }}</b> · <span data-at="{{ h.at }}"></span><br>
+<span class="small muted">Got {{ h.stats.cards_new }} new card{{ '' if h.stats.cards_new == 1 else 's' }}, {{ h.stats.cards_updated }} updated, {{ h.stats.reviews }} reviews, {{ h.stats.lessons }} lessons, {{ h.stats.xp }} XP events{% if h.stats.media %}, {{ h.stats.media }} media files{% endif %}.</span></li>{% endfor %}</ul></section>{% endif %}
+<p class="tiny muted" style="margin-top:14px">This device: {{ device }}</p>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/sync.js') }}"></script>{% endblock %}

@@ -1,5 +1,6 @@
 {% extends "base.html" %}{% block title %}Japanese in short bursts{% endblock %}
 {% block content %}
+{% if deleted %}<div class="alert ok" role="status">Your account and all its data were deleted from this device.</div>{% endif %}
 <section class="landing-hero">
   <div>
     <div class="eyebrow">朱印館 · shuinkan · “the red-seal hall”</div>

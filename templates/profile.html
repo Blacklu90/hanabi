@@ -1,7 +1,7 @@
 {% extends "base.html" %}{% block title %}Profile{% endblock %}{% block wrap_class %}narrow{% endblock %}
 {% block content %}
 <div class="page-head"><div class="eyebrow">☺</div><h1>Profile</h1><p>Member since <span data-date="{{ user.created_at }}"></span> · {{ n_sessions }} active sign-in{{ '' if n_sessions == 1 else 's' }}</p></div>
-{% if saved == 'profile' %}<div class="alert ok">Profile saved ✓</div>{% elif saved == 'password' %}<div class="alert ok">Password changed. You've been signed out on your other devices.</div>{% endif %}
+{% if saved == 'profile' %}<div class="alert ok">Profile saved ✓</div>{% elif saved == 'reset' %}<div class="alert ok">Your progress was reset. Everything's fresh — your account and settings are still here.</div>{% elif saved == 'password' %}<div class="alert ok">Password changed. You've been signed out on your other devices.</div>{% endif %}
 {% if errors %}<div class="alert err" role="alert"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
 <form class="card" method="post" action="/profile"><input type="hidden" name="csrf" value="{{ csrf }}">
   <h2>About you</h2>
@@ -16,4 +16,27 @@
   <div class="field"><label for="new">New password</label><input id="new" name="new" type="password" autocomplete="new-password" minlength="10" required><div class="hint">At least 10 characters. This signs you out on every other device.</div></div>
   <button class="btn" type="submit">Change password</button>
 </form>
+
+<section class="card danger-zone" style="margin-top:16px" aria-labelledby="dz-h">
+  <h2 id="dz-h">Your data</h2>
+  <p class="small muted">Your data is stored only on your own devices. These can't be undone. If you sync with another device, delete there too.</p>
+  <details{% if open == 'reset' %} open{% endif %}>
+    <summary class="btn">Reset progress…</summary>
+    <form method="post" action="/profile/reset" class="dz-form"><input type="hidden" name="csrf" value="{{ csrf }}">
+      <p class="small">Removes your cards, reviews, decks, imported Anki decks, notes, dictionaries, quiz history, XP and achievements. Your account and settings stay.</p>
+      <div class="field"><label for="r-pw">Your password</label><input id="r-pw" name="password" type="password" autocomplete="current-password" required></div>
+      <div class="field"><label for="r-c">Type <b>RESET</b> to confirm</label><input id="r-c" name="confirm" type="text" autocomplete="off" required pattern="[Rr][Ee][Ss][Ee][Tt]"></div>
+      <button class="btn danger" type="submit">Reset all my progress</button>
+    </form>
+  </details>
+  <details{% if open == 'delete' %} open{% endif %} style="margin-top:10px">
+    <summary class="btn danger-outline">Delete my account…</summary>
+    <form method="post" action="/profile/delete" class="dz-form"><input type="hidden" name="csrf" value="{{ csrf }}">
+      <p class="small">Deletes your account and <b>all</b> of its data from this device, then signs you out.</p>
+      <div class="field"><label for="d-pw">Your password</label><input id="d-pw" name="password" type="password" autocomplete="current-password" required></div>
+      <div class="field"><label for="d-c">Type <b>DELETE</b> to confirm</label><input id="d-c" name="confirm" type="text" autocomplete="off" required pattern="[Dd][Ee][Ll][Ee][Tt][Ee]"></div>
+      <button class="btn danger" type="submit">Delete my account and data</button>
+    </form>
+  </details>
+</section>
 {% endblock %}

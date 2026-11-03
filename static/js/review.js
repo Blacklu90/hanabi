@@ -1,6 +1,6 @@
 // Flashcard review (Anki-style): reveal, rate 1–4 (each button shows its next interval),
 // undo the last answer, bury/suspend, and edit your own notes. The server schedules everything.
-import { furigana, h, kanjiRows } from './words-ui.js';
+import { furigana, h, kanaNotes, kanaRows, kanjiRows } from './words-ui.js';
 import { $, $$, api, burstActive, reward, sparks, toast } from './app.js';
 
 const root = $('[data-review]');
@@ -269,6 +269,7 @@ function showWordBack(c) {
   let any = false;
   if (c.parts) { reading.replaceChildren(furigana(c.parts)); any = true; }
   if (c.kanji?.length) { rows.append(kanjiRows(c.kanji)); any = true; }
+  if (c.kana_rows?.length) { const k = h('div', 'center'); k.append(kanaRows(c.kana_rows)); rows.append(k, kanaNotes(c.kana_rows)); any = true; }
   if (c.hint) { hint.textContent = c.hint; any = true; }
   if (c.words?.length) {
     const ul = h('ul', 'kw-list');

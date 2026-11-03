@@ -14,7 +14,7 @@ from sqlalchemy import and_, delete, func, or_, select, update
 from . import content, db, gamify, quiz
 from .kana import SCRIPTS
 from .security import DEV, DUMMY_HASH, hash_password, limiter, new_token, token_hash, verify_password
-from . import cards, readings, srs, words
+from . import cards, kana_words, readings, srs, words
 from .web import (check_csrf, create_session, mastery_cfg, page_user, redirect, render, set_session_cookie, user_of)
 
 router = APIRouter()
@@ -42,11 +42,12 @@ def safe_next(nxt: str | None) -> str:
 
 # ------------------------------------------------------------------ public
 @router.get("/")
-def landing(request: Request):
+def landing(request: Request, deleted: int = 0):
     if user_of(request):
         return redirect("/dashboard")
     m = content.meta()
-    return render(request, "landing.html", {"kanji_count": m.get("kanji_count"), "vocab_count": m.get("kanji_vocab_count")})
+    return render(request, "landing.html", {"kanji_count": m.get("kanji_count"), "vocab_count": m.get("kanji_vocab_count"),
+                                            "deleted": deleted})
 
 
 @router.get("/about")
@@ -290,6 +291,63 @@ def course(request: Request, script: str):
                                            "groups": [("basic", "Basic sounds"), ("voiced", "Voiced sounds"), ("combo", "Combinations"), ("special", "Foreign sounds")]})
 
 
+def _kana_word(w: dict, script: str, have=frozenset()) -> dict:
+    b = kana_words.breakdown(w["word"], script)
+    return {**w, **b, "added": w["id"] in have, "hint": " ".join(kana_words.NOTE_TEXT[n] for n in b["notes"])}
+
+
+@router.get("/learn/{script}/words")
+def kana_words_page(request: Request, script: str):
+    u = page_user(request)
+    sc = _script_or_404(script)
+    with db.ro() as c:
+        known = kana_words.known_kana(c, u["id"], script)
+        have = kana_words.user_ids(c, u["id"], script)
+        decks = c.execute(select(db.decks.c.id, db.decks.c.name).where(db.decks.c.user_id == u["id"]).order_by(db.decks.c.name)).all()
+    cw = kana_words.course(script)["words"]
+    readable = sum(1 for w in cw if kana_words.can_read(w, known, script))
+    upcoming = [_kana_word(w, script) for w in kana_words.next_words(script, known, set(have), 12)]
+    n_chars = len([c for c in sc["chars"] if c["kana"] not in ("ッ", "ー")])
+    deck_name = "Hiragana words" if script == "hiragana" else "Katakana words"
+    deck = next((d for d in decks if d.name == deck_name), None)
+    return render(request, "kana_words.html", {
+        "script": script, "sc": sc, "total": len(cw), "readable": readable, "studying": len(have),
+        "learned": sum(1 for r in have.values() if r["state"] in ("review", "mastered")),
+        "known": len([k for k in known if k not in ("っ", "ッ")]), "n_chars": n_chars, "upcoming": upcoming,
+        "decks": decks, "deck": deck, "deck_name": deck_name,
+    })
+
+
+@router.get("/learn/{script}/read")
+def kana_read_page(request: Request, script: str):
+    u = page_user(request)
+    sc = _script_or_404(script)
+    with db.ro() as c:
+        known = kana_words.known_kana(c, u["id"], script)
+    return render(request, "kana_read.html", {"script": script, "sc": sc, "known": len(known)})
+
+
+_KANA_GUIDE: dict = {}
+
+
+@router.get("/learn/{script}/guide")
+def kana_guide_page(request: Request, script: str):
+    page_user(request)
+    sc = _script_or_404(script)
+    if script not in _KANA_GUIDE:
+        ex = {k: [] for k in kana_words.NOTE_TEXT}
+        counts = {k: 0 for k in kana_words.NOTE_TEXT}
+        cw = kana_words.course(script)["words"]
+        for w in cw:
+            b = kana_words.breakdown(w["word"], script)
+            for n in b["notes"]:
+                counts[n] += 1
+                if len(ex[n]) < 6 and w.get("first"):
+                    ex[n].append(_kana_word(w, script))
+        _KANA_GUIDE[script] = {"ex": ex, "counts": counts, "total": len(cw)}
+    return render(request, "kana_guide.html", {"script": script, "sc": sc, **_KANA_GUIDE[script]})
+
+
 @router.get("/learn/{script}/{n}")
 def lesson(request: Request, script: str, n: int):
     u = page_user(request)
@@ -310,8 +368,11 @@ def lesson(request: Request, script: str, n: int):
                                                                        db.lesson_completions.c.lesson == les["slug"])).first() is not None
     nxt = sc["lessons"][n] if n < len(sc["lessons"]) else None
     pool = [c["romaji"] for c in sc["chars"] if c["group"] == les["group"] and c["kana"] not in ("ッ", "ー")]
+    with db.ro() as c:
+        have = kana_words.user_ids(c, u["id"], script)
+    lesson_words = [_kana_word(w, script, have) for w in kana_words.for_lesson(script, n, 6)]
     return render(request, "lesson.html", {"script": script, "sc": sc, "les": les, "chars": chars, "done": done, "nxt": nxt,
-                                           "pool": pool})
+                                           "pool": pool, "lesson_words": lesson_words})
 
 
 @router.get("/vocab/{script}")
@@ -746,6 +807,78 @@ def password_change(request: Request, current: str = Form(""), new: str = Form("
     if errors:
         return render(request, "profile.html", {"saved": "", "errors": errors, "n_sessions": 1}, status=400)
     return redirect("/profile?saved=password")
+
+
+# ------------------------------------------------------------ Wi-Fi sync
+@router.get("/sync")
+def sync_page(request: Request):
+    u = page_user(request)
+    from . import sync
+    with db.ro() as c:
+        sl = db.sync_log.c
+        history = c.execute(select(sl.peer, sl.role, sl.stats_json, sl.at).where(sl.user_id == u["id"]).order_by(sl.at.desc()).limit(8)).all()
+    return render(request, "sync.html", {"history": [{"peer": h.peer, "role": h.role, "at": h.at, "stats": json.loads(h.stats_json)} for h in history],
+                                         "device": sync.device_name(), "status": sync.host_status(u["id"])})
+
+
+# ------------------------------------------------------------ your data
+# Everything that is "learning data". Deleting a deck also removes its Anki note types and media (FK cascade),
+# deleting a card removes its reviews, and deleting a quiz attempt removes its answers.
+LEARNING_TABLES = ["sync_log", "progress", "reviews", "srs_cards", "notes", "custom_cards", "anki_models", "anki_media", "decks",
+                   "user_dicts", "quiz_attempts", "game_sessions", "lesson_completions", "xp_events", "activity", "achievements"]
+
+
+def _confirm_destructive(request: Request, u, password: str, word: str, expected: str):
+    if not limiter.allow(f"danger:{u['id']}", 5, 900):
+        return "Too many attempts. Try again in a few minutes."
+    with db.ro() as c:
+        h = c.execute(select(db.users.c.password_hash).where(db.users.c.id == u["id"])).scalar()
+    if not verify_password(password, h):
+        return "That password isn't right."
+    if word.strip().upper() != expected:
+        return f"Type {expected} to confirm."
+    return None
+
+
+def _scrub():
+    """Deleted rows are overwritten (secure_delete); this also clears old copies from the write-ahead log."""
+    with db.engine.connect() as c:
+        c.exec_driver_sql("PRAGMA wal_checkpoint(TRUNCATE)")
+
+
+@router.post("/profile/reset")
+def reset_progress(request: Request, password: str = Form(""), confirm: str = Form(""), csrf: str = Form("")):
+    """Start over: removes all learning data, keeps the account and its settings."""
+    u = page_user(request)
+    check_csrf(request, csrf)
+    problem = _confirm_destructive(request, u, password, confirm, "RESET")
+    if problem:
+        return render(request, "profile.html", {"saved": "", "errors": [problem], "n_sessions": 1, "open": "reset"}, status=400)
+    with db.tx() as c:
+        for name in LEARNING_TABLES:
+            t = db.metadata.tables[name]
+            if "user_id" in t.c:
+                c.execute(delete(t).where(t.c.user_id == u["id"]))
+        c.execute(update(db.users).where(db.users.c.id == u["id"]).values(xp=0))
+        gamify.log(c, u["id"], "account", "Started fresh: progress reset")
+    _scrub()
+    return redirect("/profile?saved=reset")
+
+
+@router.post("/profile/delete")
+def delete_account(request: Request, password: str = Form(""), confirm: str = Form(""), csrf: str = Form("")):
+    """Removes the account and everything in it from this device."""
+    u = page_user(request)
+    check_csrf(request, csrf)
+    problem = _confirm_destructive(request, u, password, confirm, "DELETE")
+    if problem:
+        return render(request, "profile.html", {"saved": "", "errors": [problem], "n_sessions": 1, "open": "delete"}, status=400)
+    with db.tx() as c:
+        c.execute(delete(db.users).where(db.users.c.id == u["id"]))  # every table cascades from users
+    _scrub()
+    resp = redirect("/?deleted=1")
+    resp.delete_cookie("shuinkan_session", path="/")
+    return resp
 
 
 @router.get("/hooks")

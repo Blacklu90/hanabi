@@ -1,4 +1,4 @@
-{% extends "base.html" %}{% block title %}{{ les.title }} · {{ sc.label }}{% endblock %}
+{% extends "base.html" %}{% from "_kana_words.html" import kana_word_row %}{% block title %}{{ les.title }} · {{ sc.label }}{% endblock %}
 {% block body_class %}focus{% endblock %}
 {% block content %}
 <div class="study" data-lesson data-slug="{{ les.slug }}" data-script="{{ script }}">
@@ -52,6 +52,11 @@
       {% if nxt %}<a class="btn primary lg" href="/learn/{{ script }}/{{ nxt.id }}">Next: {{ nxt.title }} →</a>{% endif %}
       <a class="btn lg" href="/dashboard">Back home</a>
     </div>
+    {% if lesson_words %}<div class="lesson-words">
+      <h3>You can now read these words</h3>
+      <div class="word-list">{% for w in lesson_words %}{{ kana_word_row(w, script, True) }}{% endfor %}</div>
+      <a class="small" href="/learn/{{ script }}/words">More words you can read →</a>
+    </div>{% endif %}
     <p class="small muted" style="margin-top:14px">Feeling done? That's a great place to take a break.</p>
   </section>
 

@@ -32,7 +32,7 @@
     <div class="field"><label for="mastery_reps">Correct in a row: <b data-out="mastery_reps">{{ user.mastery_reps }}</b></label><input id="mastery_reps" name="mastery_reps" type="range" min="1" max="10" value="{{ user.mastery_reps }}"></div>
     <div class="field"><label for="mastery_interval">Review interval at least <b data-out="mastery_interval">{{ user.mastery_interval }}</b> days</label><input id="mastery_interval" name="mastery_interval" type="range" min="1" max="365" value="{{ user.mastery_interval }}"></div>
   </div>
-  <div class="row"><button class="btn primary lg" type="submit">Save settings</button><a class="btn lg" href="/profile">Profile &amp; password →</a></div>
+  <div class="row"><button class="btn primary lg" type="submit">Save settings</button><a class="btn lg" href="/profile">Profile &amp; password →</a><a class="btn lg" href="/sync">⇄ Sync devices</a></div>
 </form>
 {% endblock %}
 {% block scripts %}<script type="module" src="{{ asset('js/settings.js') }}"></script>{% endblock %}

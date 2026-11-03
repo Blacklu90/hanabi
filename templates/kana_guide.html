@@ -1,0 +1,30 @@
+{% extends "base.html" %}{% from "_kana_words.html" import kana_word_row %}{% block title %}How {{ sc.label|lower }} work{% endblock %}
+{% macro section(key, title, body) -%}
+<div class="card"><h2>{{ title }}</h2><p class="small">{{ body }} <span class="muted">({{ "{:,}".format(counts[key]) }} of the {{ "{:,}".format(total) }} words in the course.)</span></p>
+{% if ex[key] %}<div class="word-list">{% for w in ex[key] %}{{ kana_word_row(w, script) }}{% endfor %}</div>{% endif %}</div>
+{%- endmacro %}
+{% block content %}
+<div class="page-head"><div class="eyebrow">{{ sc.jp }}</div><h1>How {{ sc.label|lower }} work</h1>
+<p>{{ sc.label }} is almost perfectly regular: each character is one sound, and a handful of marks and small characters change it. Learn these and you can read any {{ sc.label|lower }} word out loud.</p></div>
+{% set here = '/learn/' ~ script ~ '/guide' %}{% include "_kana_tabs.html" %}
+<div class="grid g2">
+  {{ section('dakuten', '゛ and ゜ change the sound', "Two little marks: ゛ (dakuten) voices a sound — k→g, s→z, t→d, h→b — and ゜ (handakuten) turns h into p.") }}
+  {{ section('combo', 'Small ゃ ゅ ょ make one sound' if script == 'hiragana' else 'Small ャ ュ ョ make one sound', "After an i-sound kana, a small ya/yu/yo blends in: き + small ゃ = きゃ (kya), one beat, not two.") }}
+  {{ section('small-tsu', 'Small っ doubles the next sound' if script == 'hiragana' else 'Small ッ doubles the next sound', "A small tsu is a tiny pause: the next consonant is doubled — がっこう is gak-kō, not ga-tsu-kō.") }}
+  {% if script == 'hiragana' %}
+  {{ section('long-vowel', 'Two vowels make a long vowel', "おう and おお are a long o, えい is usually a long e, and ああ, いい, うう are long a, i, u. Romaji writes them ou / ō, ei, and so on.") }}
+  {% else %}
+  {{ section('long', 'ー makes a vowel long', "In katakana a long vowel is a dash: コーヒー is ko-o-hi-i. Typed as koohii, kōhī or ko-hi-.") }}
+  {{ section('foreign', 'Small ァ ィ ゥ ェ ォ: sounds from other languages', "Katakana writes foreign sounds Japanese didn't have, like ファ (fa), ティ (ti) and ウィ (wi).") }}
+  {% endif %}
+</div>
+<div class="card prose" style="margin-top:16px">
+  <h2>The fastest way to get fluent at reading</h2>
+  <ul>
+    <li><b>Read words, not just single characters.</b> After each <a href="/learn/{{ script }}">lesson</a>, the <a href="/learn/{{ script }}/words">words course</a> gives you real words using what you just learned.</li>
+    <li><b>Practise reading things you haven't seen.</b> <a href="/learn/{{ script }}/read">Read it</a> shows you new words made only of {{ sc.label|lower }} you know.</li>
+    <li><b>Use hooks for the tricky ones.</b> The <a href="/hooks?script={{ script }}">memory hooks chart</a> has a picture for every character.</li>
+  </ul>
+  {% if script == 'hiragana' %}<p class="small muted">Two spelling surprises in sentences: the particle は is read “wa” and へ is read “e”. In words, they're read normally.</p>{% endif %}
+</div>
+{% endblock %}

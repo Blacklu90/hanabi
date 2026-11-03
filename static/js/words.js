@@ -8,7 +8,7 @@ form?.addEventListener('submit', async (e) => {
   const btn = e.submitter, st = $('[data-aw-status]', form);
   btn.disabled = true;
   try {
-    const r = await api('/api/words/add', { count: Number(btn.value), deck: Number(form.deck.value) || 0 });
+    const r = await api(form.dataset.url || '/api/words/add', { count: Number(btn.value), deck: Number(form.deck.value) || 0 });
     st.textContent = `Added ${r.added} words to “${r.deck}”. Opening your deck…`;
     reward(r);
     setTimeout(() => { location.href = `/review?deck=${r.deck_id}`; }, 900);

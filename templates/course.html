@@ -8,6 +8,7 @@
     <a class="btn sm {{ 'ink' if script == 'katakana' }}" href="/learn/katakana">カタカナ</a>
   </div>
 </div>
+{% set here = '/learn/' ~ script %}{% include "_kana_tabs.html" %}
 {% if nxt %}
 <a class="card card-link hero-next" href="/learn/{{ script }}/{{ nxt.id }}" style="margin-bottom:22px">
   <div class="glyph" aria-hidden="true">{{ nxt.chars[0] }}</div>
@@ -17,7 +18,7 @@
 {% else %}
 <div class="alert ok">Every {{ sc.label }} lesson is done. Keep it fresh with <a href="/review?track={{ script }}">reviews</a> or a <a href="/quiz">mastery test</a>.</div>
 {% endif %}
-<div class="row" style="margin-bottom:18px"><a class="btn sm" href="/hooks?script={{ script }}">💡 Memory hooks chart</a><a class="btn sm" href="/vocab/{{ script }}">語 {{ sc.label }} words</a><a class="btn sm" href="/write?track={{ script }}">筆 Writing practice</a><a class="btn sm" href="/review?track={{ script }}">↻ Review {{ sc.label }}</a></div>
+<div class="row" style="margin-bottom:18px"><a class="btn sm primary" href="/learn/{{ script }}/words">語 Words you can read</a><a class="btn sm" href="/vocab/{{ script }}">語 {{ sc.label }} words</a><a class="btn sm" href="/write?track={{ script }}">筆 Writing practice</a><a class="btn sm" href="/review?track={{ script }}">↻ Review {{ sc.label }}</a></div>
 {% for gid, gname in groups %}{% set ls = sc.lessons|selectattr('group', 'equalto', gid)|list %}{% if ls %}
 <section style="margin-bottom:28px">
   <h2>{{ gname }}</h2><p class="small muted" style="max-width:70ch">{{ ls[0].note }}</p>

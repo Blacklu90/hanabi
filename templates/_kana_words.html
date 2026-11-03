@@ -1,0 +1,12 @@
+{# A kana word with each sound spelled out (data from app/kana_words.py breakdown()). #}
+{% macro kana_rows(rows) -%}
+<span class="ku-list">{% for r in rows %}<span class="ku{{ ' ku-note' if r.note else '' }}"{% if r.note %} title="{{ r.note }}"{% endif %}><b lang="ja">{{ r.kana }}</b><small>{{ r.romaji or '·' }}</small></span>{% endfor %}</span>
+{%- endmacro %}
+
+{% macro kana_word_row(w, script, add=False) -%}
+<div class="word-row kana-row">
+  <div class="wr-main"><span class="furi" lang="ja">{{ w.word }}</span><span class="small"><b>{{ w.romaji }}</b> — {{ w.meaning }}</span>{% if w.written %}<span class="tiny muted">Usually written <span lang="ja">{{ w.written }}</span></span>{% endif %}</div>
+  <div>{{ kana_rows(w.rows) }}{% for r in w.rows if r.note %}<div class="tiny muted"><span lang="ja">{{ r.kana }}</span>: {{ r.note }}</div>{% endfor %}</div>
+  {% if add %}<div class="wr-add">{% if w.added %}<span class="pill good">In your deck</span>{% else %}<button class="btn sm" type="button" data-add-word="{{ w.id }}" data-add-url="/api/kana/{{ script }}/words/add">+ Study</button>{% endif %}</div>{% endif %}
+</div>
+{%- endmacro %}

@@ -158,6 +158,7 @@ custom_cards = Table(
     Column("fields_json", Text),   # {"Field name": "raw field HTML", ...}
     Column("ord", Integer, nullable=False, server_default="0"),  # which template (or cloze number - 1)
     Column("tags", String(500), nullable=False, server_default=""),
+    Column("uid", String(32)),  # stable id across your devices (Wi-Fi sync), filled in when first needed
 )
 # Anki note types (card templates + styling) and media (images, fonts) that came with an imported deck.
 anki_models = Table(
@@ -170,6 +171,7 @@ anki_models = Table(
     Column("css", Text, nullable=False, server_default=""),
     Column("tmpls_json", Text, nullable=False),
     Column("flds_json", Text, nullable=False),
+    Column("uid", String(32)),
 )
 anki_media = Table(
     "anki_media", metadata,
@@ -191,6 +193,7 @@ user_dicts = Table(
     Column("entries", Integer, nullable=False, server_default="0"),
     Column("enabled", Integer, nullable=False, server_default="1"),
     Column("created_at", Integer, nullable=False),
+    Column("uid", String(32)),
 )
 user_dict_entries = Table(
     "user_dict_entries", metadata,
@@ -287,6 +290,16 @@ achievements = Table(
     Column("unlocked_at", Integer, nullable=False),
     UniqueConstraint("user_id", "code"),
 )
+# Wi-Fi sync history (one row per sync, newest shown on the Sync page).
+sync_log = Table(
+    "sync_log", metadata,
+    Column("id", Integer, primary_key=True),
+    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True),
+    Column("peer", String(80), nullable=False),
+    Column("role", String(8), nullable=False),  # host | join
+    Column("stats_json", Text, nullable=False),
+    Column("at", Integer, nullable=False),
+)
 schema_migrations = Table(
     "schema_migrations", metadata,
     Column("version", Integer, primary_key=True),
@@ -377,7 +390,7 @@ content_meta = Table(
 )
 
 CONTENT_TABLES = [kanji, kanji_vocab, kanji_sentences, kana_vocab, dict_entries, dict_forms, content_meta]
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 # Additive migrations: (version, table, column, DDL). Never drops or rewrites data.
 # (Versions 2–3 added voice settings; sound was later removed. Older databases may still
 #  have unused audio_speed / voice_* columns in `settings`. They are harmless and left alone.)
@@ -394,6 +407,9 @@ MIGRATIONS = [
     (5, "custom_cards", "tags", "ALTER TABLE custom_cards ADD COLUMN tags VARCHAR(500) NOT NULL DEFAULT ''"),
     (5, "settings", "anki_autoplay", "ALTER TABLE settings ADD COLUMN anki_autoplay INTEGER NOT NULL DEFAULT 1"),
     (6, "settings", "palette", "ALTER TABLE settings ADD COLUMN palette VARCHAR(16) NOT NULL DEFAULT 'shuinkan'"),
+    (8, "custom_cards", "uid", "ALTER TABLE custom_cards ADD COLUMN uid VARCHAR(32)"),
+    (8, "anki_models", "uid", "ALTER TABLE anki_models ADD COLUMN uid VARCHAR(32)"),
+    (8, "user_dicts", "uid", "ALTER TABLE user_dicts ADD COLUMN uid VARCHAR(32)"),
 ]
 
 
@@ -417,6 +433,7 @@ def make_engine(path: Path | str = DB_PATH):
         cur.execute("PRAGMA journal_mode=WAL")
         cur.execute("PRAGMA synchronous=NORMAL")
         cur.execute("PRAGMA foreign_keys=ON")
+        cur.execute("PRAGMA secure_delete=ON")  # deleted data is overwritten, not just unlinked
         cur.execute("PRAGMA temp_store=MEMORY")
         cur.execute("PRAGMA cache_size=-16000")
         cur.execute("PRAGMA mmap_size=134217728")

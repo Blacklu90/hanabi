@@ -92,10 +92,14 @@ def create_app() -> FastAPI:
                                "eagerness": "moderate"}]}
         return JSONResponse(rules, media_type="application/speculationrules+json", headers={"Cache-Control": "public, max-age=86400"})
 
-    from . import api, pages, words
+    from . import api, kana_words, pages, words
     app.include_router(pages.router)
-    # Build the word course in the background so the first visit to /words is instant.
-    threading.Thread(target=words.course, name="warm-words", daemon=True).start()
+
+    def warm():  # build the word courses in the background so the first visit is instant
+        words.course()
+        kana_words.course("hiragana")
+        kana_words.course("katakana")
+    threading.Thread(target=warm, name="warm-words", daemon=True).start()
     app.include_router(api.router)
 
     def wants_json(request: Request) -> bool:

@@ -1,0 +1,6 @@
+<nav class="chips kanji-tabs" aria-label="{{ sc.label }}">
+  {% for href, label in [('/learn/' ~ script, 'Lessons'), ('/learn/' ~ script ~ '/words', 'Words course'), ('/learn/' ~ script ~ '/read', 'Read it'), ('/learn/' ~ script ~ '/guide', 'How ' ~ sc.label|lower ~ ' work'), ('/hooks?script=' ~ script, 'Memory hooks')] %}
+  <a class="chip" href="{{ href }}"{% if href == here %} aria-current="page" aria-pressed="true"{% else %} aria-pressed="false"{% endif %}>{{ label }}</a>
+  {% endfor %}
+  <a class="chip" href="/learn/{{ 'katakana' if script == 'hiragana' else 'hiragana' }}{{ here[('/learn/' ~ script)|length:] if here.startswith('/learn/') else '' }}" aria-pressed="false">{{ 'カタカナ →' if script == 'hiragana' else 'ひらがな →' }}</a>
+</nav>

@@ -591,3 +591,29 @@ footer a { color: var(--muted); }
   .word-row { grid-template-columns: 1fr; }
   .wr-add { justify-self: start; }
 }
+
+/* ------------------------------------------------------------ your data */
+.danger-zone { border-color: color-mix(in srgb, var(--bad) 35%, var(--line)); }
+.danger-zone summary { list-style: none; display: inline-flex; }
+.danger-zone summary::-webkit-details-marker { display: none; }
+.dz-form { margin-top: 12px; padding: 14px; border-radius: var(--radius-s); background: var(--bad-soft); }
+.btn.danger { background: var(--bad); border-color: var(--bad); color: #fff; }
+.btn.danger-outline { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 50%, var(--line)); }
+
+/* ------------------------------------------------------------ kana through words */
+.ku-list { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.ku { display: inline-flex; flex-direction: column; align-items: center; min-width: 2.2em; padding: 3px 6px; border-radius: 8px; background: var(--bg-2); }
+.ku b { font: 600 1.15rem var(--serif); color: var(--ink); }
+.ku small { font: 600 .7rem var(--sans); color: var(--muted); }
+.ku.ku-note { background: var(--gold-soft); }
+.kana-row .furi { font-size: 1.45rem; line-height: 1.5; }
+.kana-notes { max-width: 520px; margin: 6px auto; text-align: left; }
+.lesson-words { text-align: left; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+.lesson-words h3 { margin: 0 0 6px; }
+
+/* ------------------------------------------------------------ Wi-Fi sync */
+.sync-code { font: 750 2rem var(--mono); letter-spacing: .08em; margin: 2px 0 10px; color: var(--ink); }
+.sync-addr { font: 650 1.15rem var(--mono); margin: 2px 0 8px; word-break: break-all; }
+.sync-history { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.sync-grid [data-host-result], .sync-grid [data-join-result] { margin-top: 12px; }
+.btn.block { width: 100%; justify-content: center; }
