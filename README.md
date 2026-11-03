@@ -25,7 +25,15 @@ The name means "red-seal hall" (朱印館), after the red 日本語 seal in the 
 
 Shuinkan opens in its **own window** if you have a Chromium-based browser (Chromium, Chrome, Brave, Vivaldi or Edge). Closing the window stops Shuinkan. Without one, it opens in your default browser. Python is bundled, so there's nothing else to install. On very new distros without `libfuse2`, run it with `--appimage-extract-and-run` or install `fuse2`.
 
-Your progress lives in `~/.local/share/shuinkan/` and is kept across updates. To update, download the new AppImage (and run `--install` again if you use the menu entry). Other commands: `--browser` (open in your normal browser), `--stop`, `--uninstall` (keeps your progress), `--version`.
+Your progress lives in `~/.local/share/shuinkan/` and is kept across updates. To update, download the new AppImage (and run `--install` again if you use the menu entry).
+
+**Update with one command.** Get the updater once:
+
+```bash
+mkdir -p ~/.local/bin && curl -fsSL https://raw.githubusercontent.com/Blacklu90/hanabi/main/scripts/update-linux.sh -o ~/.local/bin/shuinkan-update && chmod +x ~/.local/bin/shuinkan-update
+```
+
+From then on, `shuinkan-update` downloads the newest AppImage (only if there is one), stops the running app, swaps it in and refreshes the menu entry. Your progress isn't touched. `--force` downloads even when you're up to date. Other commands: `--browser` (open in your normal browser), `--stop`, `--uninstall` (keeps your progress), `--version`.
 
 ## Install on Android
 
