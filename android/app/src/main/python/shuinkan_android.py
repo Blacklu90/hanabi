@@ -50,6 +50,8 @@ def start(res_dir: str, data_dir: str) -> int:
         _log("importing uvicorn")
         import uvicorn
 
+        from importlib.metadata import version
+        _log("versions: " + ", ".join(f"{n} {version(n)}" for n in ("fastapi", "starlette", "pydantic", "pydantic-core", "uvicorn", "SQLAlchemy")))
         _log(f"loading the app ({time.time() - t0:.1f}s)")
         from app.main import app  # creates/updates the database and copies in the content
 

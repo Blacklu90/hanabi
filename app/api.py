@@ -6,10 +6,11 @@ import re
 import random
 import secrets
 import time
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import Response
-from pydantic import BaseModel, Field
+from pydantic import AfterValidator, BaseModel, Field
 from sqlalchemy import and_, case, delete, func, or_, select, update
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
@@ -32,6 +33,16 @@ def finish_up(c, u) -> dict:
 
 
 # ------------------------------------------------------------------ lessons
+
+def _length(lo: int, hi: int):
+    """List length limit, checked in Python. (Field(min_length=…) on a list isn't supported by every
+    pydantic-core build: the Android one refuses to start with it.)"""
+    def check(v):
+        if not lo <= len(v) <= hi:
+            raise ValueError(f"expected {lo}–{hi} items, got {len(v)}")
+        return v
+    return check
+
 class LessonIn(BaseModel):
     lesson: str = Field(max_length=32)
 
@@ -58,7 +69,7 @@ def lesson_complete(body: LessonIn, u=Depends(require_user)):
 # ------------------------------------------------------------- flashcards
 class AddIn(BaseModel):
     track: str
-    items: list[str] = Field(min_length=1, max_length=200)
+    items: Annotated[list[str], AfterValidator(_length(1, 200))]
 
 
 @router.post("/srs/add", dependencies=W)
@@ -124,7 +135,7 @@ def review_undo(body: UndoIn, u=Depends(require_user)):
 
 
 class CardIdsIn(BaseModel):
-    ids: list[int] = Field(min_length=1, max_length=5000)
+    ids: Annotated[list[int], AfterValidator(_length(1, 5000))]
 
 
 def _own_ids(c, uid, ids):
@@ -242,7 +253,7 @@ def deck_delete(did: int, u=Depends(require_user)):
 
 
 class AddKanjiIn(BaseModel):
-    chars: list[str] = Field(default_factory=list, max_length=2136)
+    chars: Annotated[list[str], AfterValidator(_length(0, 2136))] = Field(default_factory=list)
     grade: int = 0
 
 
