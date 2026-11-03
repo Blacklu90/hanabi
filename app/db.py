@@ -385,7 +385,9 @@ def make_engine(path: Path | str = DB_PATH):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     # uri=True lets sync_content ATTACH the shipped content.db read-only (it may live on a read-only AppImage mount)
-    eng = create_engine(f"sqlite:///file:{path}?uri=true", connect_args={"check_same_thread": False, "timeout": 15}, pool_size=8, max_overflow=8)
+    eng = create_engine(f"sqlite:///{path.resolve().as_uri()}?uri=true", connect_args={"check_same_thread": False, "timeout": 15},
+                        pool_size=8, max_overflow=8)
+    eng.hanabi_path = path.resolve()  # the real file path (works on Linux and Windows)
 
     @event.listens_for(eng, "connect")
     def _pragmas(dbapi_conn: sqlite3.Connection, _):
@@ -443,12 +445,12 @@ def sync_content(eng, src: Path | None = None) -> bool:
     Runs at startup, takes a few seconds once per content update.
     """
     src = Path(src or CONTENT_DB)
-    if not src.exists() or src.resolve() == Path(eng.url.database.removeprefix("file:")).resolve():
+    if not src.exists() or src.resolve() == getattr(eng, "hanabi_path", None):
         return False
     raw = eng.raw_connection()
     try:
         cur = raw.cursor()
-        cur.execute("ATTACH DATABASE ? AS src", (f"file:{src}?mode=ro&immutable=1",))
+        cur.execute("ATTACH DATABASE ? AS src", (f"{src.resolve().as_uri()}?mode=ro&immutable=1",))
         try:
             new = cur.execute("SELECT value FROM src.content_meta WHERE key='built_at'").fetchone()
             old = cur.execute("SELECT value FROM main.content_meta WHERE key='built_at'").fetchone()

@@ -54,3 +54,59 @@ jobs:
         run: |
           gh release create "$GITHUB_REF_NAME" --title "Hanabi $GITHUB_REF_NAME" --generate-notes || true
           gh release upload "$GITHUB_REF_NAME" dist/Hanabi-*-x86_64.AppImage data/content.db --clobber
+
+  windows:
+    needs: test
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          name: content-db
+          path: data
+      - name: Install
+        run: python -m pip install -r requirements.txt -r requirements-dev.txt pyinstaller pillow
+      - name: Tests (on Windows)
+        run: python -m pytest -q
+      - name: Build Hanabi.exe
+        run: pyinstaller packaging/windows/hanabi.spec --noconfirm
+      - name: Smoke test (start, load a page, stop)
+        run: |
+          $env:LOCALAPPDATA = "$env:RUNNER_TEMP\appdata"
+          Start-Process -FilePath dist\Hanabi\Hanabi.exe -ArgumentList "--browser"
+          $ok = $false
+          for ($i = 0; $i -lt 60; $i++) {
+            try { $r = Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8000/login; if ($r.StatusCode -eq 200) { $ok = $true; break } } catch {}
+            Start-Sleep -Seconds 2
+          }
+          Get-Content "$env:LOCALAPPDATA\Hanabi\hanabi.log" -ErrorAction SilentlyContinue
+          if (-not $ok) { throw "Hanabi.exe did not start" }
+          & dist\Hanabi\Hanabi.exe --stop
+          Start-Sleep -Seconds 4
+      - name: Portable zip + installer
+        run: |
+          $v = (Select-String -Path app\desktop.py -Pattern '^VERSION = "(.*)"').Matches[0].Groups[1].Value
+          Compress-Archive -Path dist\Hanabi -DestinationPath "dist\Hanabi-$v-windows-portable.zip"
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress | Out-Null }
+          & $iscc "/DVersion=$v" packaging\windows\hanabi.iss
+          Get-ChildItem dist\*.exe, dist\*.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Hanabi-Windows
+          path: |
+            dist/Hanabi-Setup-*.exe
+            dist/Hanabi-*-windows-portable.zip
+      - name: Attach to release (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$env:GITHUB_REF_NAME" --title "Hanabi $env:GITHUB_REF_NAME" --generate-notes 2>$null
+          gh release upload "$env:GITHUB_REF_NAME" (Get-ChildItem dist\Hanabi-Setup-*.exe).FullName (Get-ChildItem dist\Hanabi-*-windows-portable.zip).FullName --clobber

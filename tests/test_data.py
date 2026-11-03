@@ -81,7 +81,7 @@ def test_vocab_and_sentence_references():
     for c_ in ("food", "animals", "daily life", "nature", "people", "time", "transport", "technology", "countries", "travel", "hobbies", "clothing"):
         assert c_ in cats
     assert all(k.meaning and k.jmdict_id for k in kana)
-    report = json.loads((ROOT / "data" / "content_report.json").read_text())
+    report = json.loads((ROOT / "data" / "content_report.json").read_text(encoding="utf-8"))
     assert int(meta["kanji_vocab_count"]) == len(bad_w) == int(report["kanji_vocab_count"])
     assert int(meta["kanji_sentence_count"]) == len(sents)
 

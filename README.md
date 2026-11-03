@@ -1,4 +1,4 @@
-# 日本語 Hanabi — Japanese in short, focused bursts
+# 日本語 Hanabi — Japanese in short, focused bursts (Linux & Windows)
 
 [![CI](https://github.com/Blacklu90/hanabi/actions/workflows/ci.yml/badge.svg)](https://github.com/Blacklu90/hanabi/actions/workflows/ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/Blacklu90/hanabi)](https://github.com/Blacklu90/hanabi/releases/latest)
@@ -25,6 +25,18 @@ Hanabi opens in its **own window** if you have a Chromium-based browser (Chromiu
 
 Your progress lives in `~/.local/share/hanabi/` and is kept across updates. To update, download the new AppImage (and run `--install` again if you use the menu entry). Other commands: `--browser` (open in your normal browser), `--stop`, `--uninstall` (keeps your progress), `--version`.
 
+## Install on Windows
+
+1. Download **`Hanabi-Setup-<version>.exe`** from the [Releases](https://github.com/Blacklu90/hanabi/releases/latest) page.
+2. Run it. It installs just for you, with no admin rights needed, and adds Hanabi to the Start menu (a desktop shortcut is optional).
+3. Start **Hanabi** from the Start menu.
+
+Hanabi opens in its own window using Microsoft Edge, which comes with Windows (or Chrome or Brave if you prefer those). Closing the window stops Hanabi. Your progress is saved in `%LOCALAPPDATA%\Hanabi` and is kept if you uninstall.
+
+Prefer no installer? Download **`Hanabi-<version>-windows-portable.zip`**, unzip it anywhere and run `Hanabi.exe`.
+
+> Windows may show a "Windows protected your PC" warning the first time, because the app isn't code-signed. Click **More info → Run anyway**.
+
 ### Arch Linux
 
 ```bash
@@ -49,7 +61,7 @@ The first run builds the kanji and dictionary database from KANJIDIC2, JMdict an
 ./scripts/build_appimage.sh                                       # makes dist/Hanabi-<version>-x86_64.AppImage
 ```
 
-GitHub Actions does this automatically: every push runs the tests, and pushing a tag like `v1.0.0` publishes a release with the AppImage attached.
+GitHub Actions does this automatically. Every push runs the tests on Linux and Windows and builds the AppImage, the Windows installer and the portable zip. Pushing a tag like `v1.0.0` publishes a release with all three attached.
 
 ## How it helps you study
 
@@ -130,7 +142,7 @@ data/       content.db (shipped content: kanji, words, dictionary; replaced on u
                         copied in from content.db automatically when a newer one ships)
             strokes/ (KanjiVG SVGs), content_report.json
 scripts/    build_content.py, fetch_sources.sh, build_appimage.sh, benchmark.py
-packaging/  hanabi.desktop, hanabi.png, arch/PKGBUILD
+packaging/  hanabi.desktop, hanabi.png, arch/PKGBUILD, windows/ (PyInstaller recipe, Inno Setup installer, icon)
 .github/    CI: tests on every push; AppImage on version tags
 tests/      pytest suite
 ```
