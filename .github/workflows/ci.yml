@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: write  # needed to attach the AppImage to a release
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install -r requirements.txt -r requirements-dev.txt
+      - name: Build content (KANJIDIC2, JMdict, Tatoeba)
+        run: |
+          ./scripts/fetch_sources.sh
+          python -m scripts.build_content
+      - name: Tests
+        run: python -m pytest -q
+      - uses: actions/upload-artifact@v4
+        with:
+          name: content-db
+          path: data/content.db
+          retention-days: 7
+
+  appimage:
+    needs: test
+    runs-on: ubuntu-22.04  # older base = works on more distributions
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: content-db
+          path: data
+      - name: Build AppImage
+        run: ./scripts/build_appimage.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Hanabi-AppImage
+          path: dist/Hanabi-*-x86_64.AppImage
+      - name: Attach to release (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --title "Hanabi $GITHUB_REF_NAME" --generate-notes || true
+          gh release upload "$GITHUB_REF_NAME" dist/Hanabi-*-x86_64.AppImage data/content.db --clobber

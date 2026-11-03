@@ -1,0 +1,36 @@
+{% extends "base.html" %}{% block title %}Practice{% endblock %}
+{% block content %}
+<div class="page-head row between"><div><div class="eyebrow">Practice</div><h1>Quizzes &amp; games</h1>
+<p>Pick a format and a topic. Short and quick is the default. Everything is scored on the server, so XP means real progress.</p></div>
+<div class="row"><a class="btn" href="/write">筆 Writing</a><a class="btn" href="/match">◇ Matching game</a></div></div>
+
+<form class="card stack" data-quiz-form>
+  <div><div class="eyebrow">1 · Format</div>
+    <div class="seg" role="radiogroup" aria-label="Format">
+      {% for v, l in [('practice','10 questions'),('mastery','Mastery test · 20 Q · pass 80%'),('sprint60','60-second sprint'),('sprint120','120-second challenge')] %}
+      <input type="radio" name="mode" id="m-{{ v }}" value="{{ v }}" {% if loop.first %}checked{% endif %}><label for="m-{{ v }}">{{ l }}</label>{% endfor %}
+    </div></div>
+  <div class="row">
+    <div><div class="eyebrow">2 · Material</div>
+      <div class="seg" role="radiogroup" aria-label="Material">
+        <input type="radio" name="pool" id="p-l" value="learned" checked><label for="p-l">What I've started</label>
+        <input type="radio" name="pool" id="p-a" value="all"><label for="p-a">All content</label></div></div>
+    <div style="min-width:200px"><div class="eyebrow">Kanji grade</div><label class="sr" for="qgrade">Kanji grade</label>
+      <select id="qgrade" name="grade"><option value="0">Any grade</option>{% for g, l in GRADE_LABELS.items() %}<option value="{{ g }}">{{ l }}</option>{% endfor %}</select></div>
+  </div>
+  <div><div class="eyebrow">3 · Topic (click to start)</div>
+    {% if due %}<button class="btn primary" type="button" data-kind="due" style="margin-bottom:12px">↻ Quiz my {{ due }} due reviews</button>{% endif %}
+    {% for gname, ks in groups %}
+    <h3 style="margin-top:12px">{{ gname }}</h3>
+    <div class="grid g4">{% for k in ks %}<button class="card card-link" type="button" data-kind="{{ k }}" style="text-align:left;cursor:pointer;font:inherit;color:inherit"><b>{{ kinds[k][0] }}</b><br><span class="small muted">{{ kinds[k][1] }}</span></button>{% endfor %}</div>
+    {% endfor %}
+  </div>
+  <div class="alert err" data-quiz-err hidden role="alert"></div>
+</form>
+
+<div class="card" style="margin-top:16px"><h2>History</h2>
+{% if history %}<div class="table-wrap"><table><thead><tr><th>Quiz</th><th>Score</th><th>XP</th><th>When</th></tr></thead><tbody>
+{% for h in history %}<tr><td><a href="/quiz/{{ h.id }}/results">{{ h.title }}</a>{% if h.passed %} <span class="pill good">passed</span>{% endif %}</td><td>{{ h.score }}/{{ h.total }}</td><td>+{{ h.xp_awarded }}</td><td class="small muted" data-ago="{{ h.finished_at }}"></td></tr>{% endfor %}
+</tbody></table></div>{% else %}<div class="empty small">Your finished quizzes will show up here.</div>{% endif %}</div>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/quiz.js') }}"></script>{% endblock %}

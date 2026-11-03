@@ -1,0 +1,38 @@
+{% extends "base.html" %}{% block title %}Settings{% endblock %}{% block wrap_class %}narrow{% endblock %}
+{% block content %}
+<div class="page-head"><div class="eyebrow">⚙</div><h1>Settings</h1><p>Tune Hanabi to how your brain works. Changes are saved to your account.</p></div>
+{% if saved %}<div class="alert ok" role="status">Saved ✓</div>{% endif %}
+{% if errors %}<div class="alert err" role="alert"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+<form method="post" action="/settings" class="stack" data-settings>
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <div class="card"><h2>Focus</h2>
+    <div class="field"><label for="burst_minutes">Focus burst length: <b data-out="burst_minutes">{{ user.burst_minutes }}</b> min</label><input id="burst_minutes" name="burst_minutes" type="range" min="2" max="25" step="1" value="{{ user.burst_minutes }}"><div class="hint">Short bursts with breaks are easier to start, and easier to come back to.</div></div>
+    <div class="field"><label for="daily_goal">Daily goal: <b data-out="daily_goal">{{ user.daily_goal }}</b> XP</label><input id="daily_goal" name="daily_goal" type="range" min="10" max="500" step="5" value="{{ user.daily_goal }}"><div class="hint">About 1 XP per review. A finished lesson is 10 XP. Small goals you'll hit beat big ones you won't.</div></div>
+    <label class="check"><input type="checkbox" name="calm_mode" value="1" {% if user.calm_mode %}checked{% endif %}> Calm mode: no animations or motion</label>
+    <label class="check"><input type="checkbox" name="celebrations" value="1" {% if user.celebrations %}checked{% endif %}> Little celebrations (sparks and toasts) when you finish things</label>
+  </div>
+  <div class="card"><h2>Look &amp; display</h2>
+    <div class="field"><span class="eyebrow">Colour palette</span>
+      <div class="palettes" role="radiogroup" aria-label="Colour palette">
+        {% for pid, (name, meaning, light, dark) in palettes.items() %}
+        <input type="radio" name="palette" id="pal-{{ pid }}" value="{{ pid }}" {% if user.palette == pid %}checked{% endif %} data-palette-pick>
+        <label for="pal-{{ pid }}" title="{{ meaning }}"><span class="sw" style="background: linear-gradient(135deg, {{ light }} 50%, {{ dark }} 50%)"></span><span>{{ name }}<br><span class="tiny muted jp">{{ meaning }}</span></span></label>
+        {% endfor %}
+      </div>
+      <div class="hint">Changes the accent colour everywhere: buttons, progress bars, the 日本語 logo. The preview is instant; Save keeps it.</div></div>
+    <div class="field"><span class="eyebrow">Theme</span><div class="seg" role="radiogroup" aria-label="Theme">
+      {% for v, l in [('system','System'),('light','Light'),('dark','Dark')] %}<input type="radio" name="theme" id="t-{{ v }}" value="{{ v }}" {% if user.theme == v %}checked{% endif %} data-theme-pick><label for="t-{{ v }}">{{ l }}</label>{% endfor %}</div></div>
+    <label class="check"><input type="checkbox" name="show_romaji" value="1" {% if user.show_romaji %}checked{% endif %}> Show romaji hints</label>
+    <label class="check"><input type="checkbox" name="show_jlpt" value="1" {% if user.show_jlpt %}checked{% endif %}> Show old JLPT levels on kanji</label>
+    <label class="check"><input type="checkbox" name="anki_autoplay" value="1" {% if user.anki_autoplay %}checked{% endif %}> Play audio from imported Anki decks automatically (like Anki; press R to replay)</label>
+    <div class="field"><label for="timezone">Time zone (for streaks and daily goals)</label><input id="timezone" name="timezone" type="text" value="{{ user.timezone }}" data-tz-field><div class="hint">e.g. Europe/Berlin. <button class="btn ghost sm" type="button" data-tz-detect>Use this device's</button></div></div>
+  </div>
+  <div class="card"><h2>Mastery rules</h2><p class="small muted">An item counts as <b>mastered</b> only when all three are true. Opening a card never counts.</p>
+    <div class="field"><label for="mastery_accuracy">Accuracy at least <b data-out="mastery_accuracy">{{ user.mastery_accuracy }}</b>%</label><input id="mastery_accuracy" name="mastery_accuracy" type="range" min="70" max="100" value="{{ user.mastery_accuracy }}"></div>
+    <div class="field"><label for="mastery_reps">Correct in a row: <b data-out="mastery_reps">{{ user.mastery_reps }}</b></label><input id="mastery_reps" name="mastery_reps" type="range" min="1" max="10" value="{{ user.mastery_reps }}"></div>
+    <div class="field"><label for="mastery_interval">Review interval at least <b data-out="mastery_interval">{{ user.mastery_interval }}</b> days</label><input id="mastery_interval" name="mastery_interval" type="range" min="1" max="365" value="{{ user.mastery_interval }}"></div>
+  </div>
+  <div class="row"><button class="btn primary lg" type="submit">Save settings</button><a class="btn lg" href="/profile">Profile &amp; password →</a></div>
+</form>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/settings.js') }}"></script>{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% block title %}About & data sources{% endblock %}{% block wrap_class %}narrow{% endblock %}
+{% block content %}
+<div class="page-head"><div class="eyebrow">About</div><h1>Data sources &amp; licences</h1>
+<p>Hanabi doesn't invent Japanese. Every kanji, reading, meaning, word and sentence comes from these community datasets, used under their licences.</p></div>
+<div class="stack">
+<div class="card"><h3>KANJIDIC2 · JMdict</h3>
+<p class="small">© Electronic Dictionary Research and Development Group (EDRDG), used under <a href="https://www.edrdg.org/edrdg/licence.html" rel="noopener">Creative Commons Attribution-ShareAlike 4.0</a>. Converted to JSON by the <a href="https://github.com/scriptin/jmdict-simplified" rel="noopener">jmdict-simplified</a> project.
+KANJIDIC2 edition {{ meta.kanjidic2_date }}, JMdict edition {{ meta.jmdict_date }}.</p>
+<p class="small">The Jōyō list and school grades in KANJIDIC2 follow the official 2010 Jōyō table and the 2020 elementary-school grade allocation by Japan's Ministry of Education (MEXT). They're a community dataset, not an official government publication.</p></div>
+<div class="card"><h3>Dictionary</h3><p class="small">The Dictionary page searches the complete JMdict ({{ '{:,}'.format(meta.dict_entries|int) if meta.dict_entries else '' }} entries, edition {{ meta.jmdict_date }}), © EDRDG, CC BY-SA 4.0. Example sentences are from Tatoeba. Dictionaries you import yourself stay private to your account; their licences are up to their authors.</p></div>
+<div class="card"><h3>Anki</h3><p class="small">Hanabi can read and write Anki deck packages (.apkg). Anki is a separate free program by Ankitects; Hanabi isn't affiliated with it.</p></div>
+<div class="card"><h3>KanjiVG stroke order</h3><p class="small">© Ulrich Apel and contributors, used under <a href="https://creativecommons.org/licenses/by-sa/3.0/" rel="noopener">Creative Commons Attribution-ShareAlike 3.0</a>.</p></div>
+<div class="card"><h3>Tatoeba example sentences</h3><p class="small">Sentences from the <a href="https://tatoeba.org" rel="noopener">Tatoeba</a> project (shipped with JMdict), used under <a href="https://creativecommons.org/licenses/by/2.0/fr/" rel="noopener">CC BY 2.0 FR</a>. These are written by volunteers, so a few may sound unusual.</p></div>
+<div class="card"><h3>Dataset check</h3>
+<table><tbody>
+<tr><th>Jōyō kanji</th><td>{{ meta.kanji_count }}</td></tr>
+{% for g, n in grades.items() %}<tr><th>{{ GRADE_LABELS[g|int] }}</th><td>{{ n }}</td></tr>{% endfor %}
+<tr><th>Kanji vocabulary</th><td>{{ meta.kanji_vocab_count }} words ({{ meta.kanji_with_vocab }} kanji have at least one)</td></tr>
+<tr><th>Example sentences</th><td>{{ meta.kanji_sentence_count }} ({{ meta.kanji_with_sentence }} kanji have at least one)</td></tr>
+<tr><th>Kana vocabulary</th><td>{{ meta.kana_vocab_count }} ({{ meta.kana_vocab_with_sentence }} with a sentence)</td></tr>
+</tbody></table>
+{% if discrepancies %}<h3 style="margin-top:18px">Stroke-count differences</h3>
+<p class="small muted">For these {{ discrepancies|length }} kanji, KANJIDIC2 and KanjiVG disagree. Most were added to the Jōyō list in 2010, and the sources count their printed shapes differently. Hanabi shows KANJIDIC2's count and notes KanjiVG's count on the kanji's page. The numbers below are KANJIDIC2/KanjiVG.</p>
+<p class="jp">{% for d in discrepancies %}<a href="/kanji/{{ d.kanji }}">{{ d.kanji }}</a> {{ d.kanjidic }}/{{ d.kanjivg }}{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+</div>
+</div>
+{% endblock %}

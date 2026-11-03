@@ -1,0 +1,37 @@
+{% extends "base.html" %}{% block title %}{{ q ~ ' · ' if q else '' }}Dictionary{% endblock %}
+{% block content %}
+<div class="page-head"><div class="eyebrow">辞書 · jisho</div><h1>Dictionary</h1>
+<p>{{ '{:,}'.format(entries|int) if entries else 'All' }} Japanese–English entries from JMdict, offline. Type Japanese (猫, ねこ), romaji (neko) or English (cat). Add any word to a deck to study it.</p></div>
+<form class="dict-search" action="/dictionary" method="get" role="search" data-dict-form>
+  <label class="sr" for="dq">Search the dictionary</label>
+  <input id="dq" name="q" type="search" value="{{ q }}" placeholder="猫 · ねこ · neko · cat" autocomplete="off" autofocus lang="ja">
+  <button class="btn primary" type="submit">Search</button>
+</form>
+<div data-dict-results aria-live="polite">{% include "_dict_results.html" %}</div>
+{% if not q %}
+<div class="grid g4" style="margin-top:6px" data-dict-tips>
+  {% for w in ['食べる', 'がっこう', 'konnichiha', 'beautiful', '日本語', 'to run', 'コーヒー', '猫'] %}<a class="card card-link small center" href="/dictionary?q={{ w|urlencode }}"><span class="jp" style="font-size:1.2rem">{{ w }}</span></a>{% endfor %}
+</div>
+{% endif %}
+
+<section class="card" style="margin-top:26px" id="my-dicts">
+  <h2>My dictionaries</h2>
+  <p class="small muted">Add your own dictionary and its results show up above the built-in ones. Supported:
+  <b>Yomitan / Yomichan</b> dictionaries (.zip, e.g. JMdict, Jitendex, KANJIDIC or monolingual ones) and <b>word lists</b> (.csv, .tsv or .txt with <i>word, reading, meaning</i> or <i>word, meaning</i> per line). Max 60 MB.</p>
+  {% if dicts %}
+  <ul class="list">
+    {% for d in dicts %}<li><span><b>{{ d.title }}</b> <span class="tiny muted">{{ '{:,}'.format(d.entries) }} entries · {{ 'Yomitan' if d.kind == 'yomitan' else 'word list' }}</span></span>
+      <span class="when row">
+        <label class="check" style="padding:0"><input type="checkbox" data-dict-toggle="{{ d.id }}" {% if d.enabled %}checked{% endif %}> Search it</label>
+        <button class="btn sm ghost" type="button" data-dict-delete="{{ d.id }}" data-title="{{ d.title }}">🗑 Delete</button></span></li>{% endfor %}
+  </ul>
+  {% endif %}
+  <form class="row" style="margin-top:12px" data-dict-import>
+    <label class="sr" for="dfile">Dictionary file</label>
+    <input id="dfile" name="file" type="file" accept=".zip,.csv,.tsv,.txt" required style="max-width:340px">
+    <button class="btn" type="submit">⇧ Import dictionary</button>
+    <span class="small muted" data-dict-msg aria-live="polite"></span>
+  </form>
+</section>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/dictionary.js') }}"></script>{% endblock %}

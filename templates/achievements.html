@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% block title %}Achievements{% endblock %}
+{% block content %}
+<div class="page-head"><div class="eyebrow">★</div><h1>Achievements</h1><p>{{ n }} of {{ items|length }} unlocked. Each one unlocks once and pays its XP once.</p></div>
+<div class="grid g3">{% for a in items %}
+  <div class="card ach{{ '' if a.at else ' locked' }}"><span class="ic" aria-hidden="true">{{ a.icon }}</span><div><b>{{ a.title }}</b><div class="small muted">{{ a.desc }}</div>
+  <div class="tiny">{% if a.at %}<span class="pill good">Unlocked</span> <span class="muted" data-ago="{{ a.at }}"></span>{% else %}<span class="muted">Locked</span>{% endif %}{% if a.xp %} · +{{ a.xp }} XP{% endif %}</div></div></div>
+{% endfor %}</div>
+{% endblock %}

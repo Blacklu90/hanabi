@@ -1,0 +1,26 @@
+# Python / tooling
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+build/
+dist/
+
+# Data that is generated or personal
+data/source/*.json
+data/source/*.zip
+data/content.db
+data/hanabi.db
+data/hanabi.db-*
+data/*.before-update
+data/backups/
+data/tts_cache/
+hanabi.pid
+hanabi.log
+
+# Arch packaging leftovers
+packaging/arch/*.AppImage
+packaging/arch/pkg/
+packaging/arch/src/
+packaging/arch/squashfs-root/
+packaging/arch/*.pkg.tar.*

@@ -1,0 +1,21 @@
+[Desktop Entry]
+Type=Application
+Name=Hanabi
+GenericName=Learn Japanese
+Comment=Japanese in short, focused bursts — kana, 2,136 kanji, decks, dictionary
+Exec=hanabi
+Icon=hanabi
+Terminal=false
+Categories=Education;Languages;
+Keywords=japanese;kanji;hiragana;katakana;anki;flashcards;nihongo;日本語;
+StartupWMClass=Hanabi
+StartupNotify=true
+Actions=browser;stop;
+
+[Desktop Action browser]
+Name=Open in my browser
+Exec=hanabi --browser
+
+[Desktop Action stop]
+Name=Stop Hanabi
+Exec=hanabi --stop

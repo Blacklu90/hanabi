@@ -1,0 +1,19 @@
+{% extends "base.html" %}{% block title %}Profile{% endblock %}{% block wrap_class %}narrow{% endblock %}
+{% block content %}
+<div class="page-head"><div class="eyebrow">☺</div><h1>Profile</h1><p>Member since <span data-date="{{ user.created_at }}"></span> · {{ n_sessions }} active sign-in{{ '' if n_sessions == 1 else 's' }}</p></div>
+{% if saved == 'profile' %}<div class="alert ok">Profile saved ✓</div>{% elif saved == 'password' %}<div class="alert ok">Password changed. You've been signed out on your other devices.</div>{% endif %}
+{% if errors %}<div class="alert err" role="alert"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+<form class="card" method="post" action="/profile"><input type="hidden" name="csrf" value="{{ csrf }}">
+  <h2>About you</h2>
+  <div class="field"><label for="display_name">Display name</label><input id="display_name" name="display_name" type="text" maxlength="64" required value="{{ user.display_name }}"></div>
+  <div class="field"><label for="username">Username</label><input id="username" name="username" type="text" required pattern="[A-Za-z0-9_]{3,32}" value="{{ user.username }}" autocomplete="username"></div>
+  <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" required value="{{ user.email }}" autocomplete="email"></div>
+  <button class="btn primary" type="submit">Save profile</button>
+</form>
+<form class="card" method="post" action="/profile/password" style="margin-top:16px"><input type="hidden" name="csrf" value="{{ csrf }}">
+  <h2>Change password</h2>
+  <div class="field"><label for="current">Current password</label><input id="current" name="current" type="password" autocomplete="current-password" required></div>
+  <div class="field"><label for="new">New password</label><input id="new" name="new" type="password" autocomplete="new-password" minlength="10" required><div class="hint">At least 10 characters. This signs you out on every other device.</div></div>
+  <button class="btn" type="submit">Change password</button>
+</form>
+{% endblock %}

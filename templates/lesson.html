@@ -1,0 +1,66 @@
+{% extends "base.html" %}{% block title %}{{ les.title }} · {{ sc.label }}{% endblock %}
+{% block body_class %}focus{% endblock %}
+{% block content %}
+<div class="study" data-lesson data-slug="{{ les.slug }}" data-script="{{ script }}">
+  <div class="focus-bar">
+    <a class="exit" href="/learn/{{ script }}" aria-label="Exit lesson">✕</a>
+    <div class="meter" role="progressbar" aria-label="Lesson progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span data-progress style="width:0%"></span></div>
+    <span class="timer" data-step-label>1/{{ chars|length }}</span>
+  </div>
+  <p class="eyebrow center">{{ sc.label }} · Lesson {{ les.id }} · {{ les.title }}</p>
+
+  {% for c in chars %}
+  <section class="card flash-step" data-step {% if not loop.first %}hidden{% endif %} aria-label="Character {{ loop.index }}">
+    <div class="grid" style="grid-template-columns: 1fr; gap:14px">
+      <div class="flash" style="min-height:240px">
+        <span class="tag pill">{{ loop.index }} / {{ chars|length }}</span>
+        <div class="glyph">{{ c.kana }}</div>
+        <div class="answer">{{ c.romaji }}</div>
+        {% if c.hook %}<p class="hook"><span class="hook-ic" aria-hidden="true">💡</span><span><span class="sr">Memory hook: </span>{{ c.hook }}</span></p>{% endif %}
+      </div>
+      {% if c.stroke %}
+      <div class="row" style="justify-content:center;gap:18px;align-items:flex-start">
+        <div class="stroke-box" style="width:180px" data-strokes="/strokes/{{ c.stroke }}" aria-label="Stroke order for {{ c.kana }}"></div>
+        <div class="stack" style="max-width:260px">
+          <div class="row"><button class="btn sm" type="button" data-play>▶ Play strokes</button><button class="btn sm" type="button" data-step-stroke>Step</button></div>
+          <a class="btn sm" href="/write?track={{ script }}&item={{ c.kana }}">筆 Practise writing</a>
+        </div>
+      </div>
+      {% elif c.parts %}
+      <p class="center small muted">Combination: {{ c.kana[0] }} + small {{ c.kana[1:] }} — said as one syllable.</p>
+      {% endif %}
+      {% if c.examples %}
+      <div><div class="eyebrow">Words with {{ c.kana }}</div>
+        {% for e in c.examples %}<div class="vocab-item"><span class="w">{{ e.word }}</span><span class="small"><b>{{ e.romaji }}</b> — {{ e.meaning }}</span></div>{% endfor %}
+      </div>{% endif %}
+    </div>
+  </section>
+  {% endfor %}
+
+  <section class="card" data-check hidden aria-label="Quick check">
+    <div class="q-prompt"><div class="eyebrow">Quick check · no pressure</div><div class="glyph" data-check-glyph></div></div>
+    <div class="opts" data-check-opts></div>
+    <div class="feedback" data-check-fb role="status"></div>
+    <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn primary" type="button" data-check-next hidden>Got it <kbd>Enter</kbd></button></div>
+  </section>
+
+  <section class="card done-screen" data-finish hidden>
+    <div class="big-glyph">花</div>
+    <h2>Lesson complete!</h2>
+    <p class="muted" data-finish-msg>These characters are now in your review queue. They'll come back tomorrow.</p>
+    <div class="row" style="justify-content:center">
+      {% if nxt %}<a class="btn primary lg" href="/learn/{{ script }}/{{ nxt.id }}">Next: {{ nxt.title }} →</a>{% endif %}
+      <a class="btn lg" href="/dashboard">Back home</a>
+    </div>
+    <p class="small muted" style="margin-top:14px">Feeling done? That's a great place to take a break.</p>
+  </section>
+
+  <div class="row" style="justify-content:space-between;margin-top:16px" data-nav>
+    <button class="btn" type="button" data-prev disabled>← Back</button>
+    <button class="btn primary lg" type="button" data-next>Next →</button>
+  </div>
+  <p class="shortcuts"><kbd>←</kbd><kbd>→</kbd> move · <kbd>Esc</kbd> exit</p>
+</div>
+<script type="application/json" id="lesson-data">{{ jdump({"chars": chars|map(attribute='kana')|list, "romaji": chars|map(attribute='romaji')|list, "hooks": chars|map(attribute='hook')|list, "pool": pool, "done": done}) }}</script>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/lesson.js') }}"></script>{% endblock %}

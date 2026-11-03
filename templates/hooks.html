@@ -1,0 +1,22 @@
+{% extends "base.html" %}{% block title %}{{ sc.label }} memory hooks{% endblock %}
+{% block content %}
+<div class="page-head row between">
+  <div><div class="eyebrow">💡 Memory hooks</div><h1>{{ sc.label }} chart</h1>
+  <p>A picture for every character: the shape links to the sound (the sound is in CAPITALS).</p></div>
+  <div class="row"><a class="btn sm {{ 'ink' if script == 'hiragana' }}" href="/hooks?script=hiragana">ひらがな</a><a class="btn sm {{ 'ink' if script == 'katakana' }}" href="/hooks?script=katakana">カタカナ</a></div>
+</div>
+{% for name, cs in groups %}
+<section style="margin-bottom:28px">
+  <h2>{{ name }}</h2>
+  <div class="hook-grid">
+  {% for c in cs %}
+    <div class="card hook-card">
+      <span class="hk-top"><b lang="ja">{{ c.kana }}</b><span class="pill">{{ c.romaji }}</span></span>
+      <span class="hk-text">{{ c.hook }}</span>
+    </div>
+  {% endfor %}
+  </div>
+</section>
+{% endfor %}
+<p class="tiny muted">Hooks written for Hanabi. You'll also see them in lessons, in reviews, and after a wrong answer.</p>
+{% endblock %}

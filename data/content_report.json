@@ -1,0 +1,71 @@
+{
+  "kanjidic2_date": "2026-11-02",
+  "jmdict_date": "2026-11-02",
+  "built_at": "1793680290",
+  "kanji_count": "2136",
+  "grade_counts": {
+    "1": 80,
+    "2": 160,
+    "3": 200,
+    "4": 202,
+    "5": 193,
+    "6": 191,
+    "8": 1110
+  },
+  "kanji_vocab_count": "10099",
+  "kanji_sentence_count": "3674",
+  "kanji_with_sentence": "1999",
+  "kanji_with_vocab": "2093",
+  "kana_vocab_count": "188",
+  "dict_entries": "219007",
+  "dict_with_sentence": "27543",
+  "kana_vocab_with_sentence": "182",
+  "stroke_discrepancies": [
+    {
+      "kanji": "餌",
+      "kanjidic": 14,
+      "kanjivg": 15
+    },
+    {
+      "kanji": "牙",
+      "kanjidic": 5,
+      "kanjivg": 4
+    },
+    {
+      "kanji": "葛",
+      "kanjidic": 11,
+      "kanjivg": 12
+    },
+    {
+      "kanji": "僅",
+      "kanjidic": 12,
+      "kanjivg": 13
+    },
+    {
+      "kanji": "遡",
+      "kanjidic": 13,
+      "kanjivg": 14
+    },
+    {
+      "kanji": "遜",
+      "kanjidic": 13,
+      "kanjivg": 14
+    },
+    {
+      "kanji": "賭",
+      "kanjidic": 15,
+      "kanjivg": 16
+    },
+    {
+      "kanji": "謎",
+      "kanjidic": 16,
+      "kanjivg": 17
+    },
+    {
+      "kanji": "餅",
+      "kanjidic": 14,
+      "kanjivg": 15
+    }
+  ],
+  "missing_svg": []
+}

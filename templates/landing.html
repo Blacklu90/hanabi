@@ -1,0 +1,30 @@
+{% extends "base.html" %}{% block title %}Japanese in short bursts{% endblock %}
+{% block content %}
+<section class="landing-hero">
+  <div>
+    <div class="eyebrow">花火 · hanabi · “fireworks”</div>
+    <h1>Japanese in <em>short, bright bursts.</em></h1>
+    <p style="font-size:1.15rem;color:var(--ink-2);max-width:46ch">Hanabi is built for brains that like momentum. Five-minute sessions. One clear next step. Instant feedback. No guilt when life happens.</p>
+    <div class="row" style="margin-top:22px"><a class="btn primary lg" href="/register">Start in 30 seconds</a><a class="btn lg" href="/login">I have an account</a></div>
+    <p class="small muted" style="margin-top:14px">Free · no ads · no tracking scripts</p>
+  </div>
+  <div class="hero-art" aria-hidden="true">
+    <svg viewBox="0 0 400 400" width="100%" height="100%">
+      <g stroke="var(--accent)" stroke-width="5" stroke-linecap="round" opacity=".9">
+        <path d="M200 60v60M200 280v60M60 200h60M280 200h60M101 101l42 42M257 257l42 42M299 101l-42 42M143 257l-42 42"/></g>
+      <g stroke="var(--gold)" stroke-width="3" stroke-linecap="round" opacity=".7">
+        <path d="M200 20v20M200 360v20M20 200h20M360 200h20M73 73l14 14M313 313l14 14M327 73l-14 14M87 313l-14 14"/></g>
+      <circle cx="200" cy="200" r="70" fill="var(--surface)" stroke="var(--line-2)"/>
+      <text x="200" y="228" text-anchor="middle" font-size="84" font-family="var(--serif)" fill="var(--ink)">花</text>
+    </svg>
+  </div>
+</section>
+<section class="grid g3" style="margin-top:10px">
+  <div class="card feature"><span class="ic">⏱</span><h3>Focus bursts</h3><p class="muted small">Pick 3–25 minutes. A gentle timer, one card at a time, and a natural stopping point. Then take a break.</p></div>
+  <div class="card feature"><span class="ic">→</span><h3>One next step</h3><p class="muted small">Your home screen always shows exactly one thing to do next. No decision fatigue, no menus to dig through.</p></div>
+  <div class="card feature"><span class="ic">休</span><h3>Kind streaks</h3><p class="muted small">Missing one day is a free rest day. Your streak only resets after two in a row.</p></div>
+  <div class="card feature"><span class="ic">あ</span><h3>Every kana</h3><p class="muted small">104 hiragana and 134 katakana, including combinations and foreign sounds, in lessons of 3–7 characters.</p></div>
+  <div class="card feature"><span class="ic">字</span><h3>All {{ kanji_count or '2,136' }} Jōyō kanji</h3><p class="muted small">Meanings, readings, radicals, stroke order and {{ vocab_count or 'thousands of' }} words from real dictionaries.</p></div>
+  <div class="card feature"><span class="ic">◎</span><h3>Real spaced repetition</h3><p class="muted small">Again / Hard / Good / Easy. Reviews come back right before you'd forget them, on any device.</p></div>
+</section>
+{% endblock %}

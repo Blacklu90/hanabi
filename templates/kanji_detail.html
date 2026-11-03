@@ -1,0 +1,69 @@
+{% extends "base.html" %}{% block title %}{{ k.char }} · {{ k.meanings.split('; ')[0] }}{% endblock %}
+{% block content %}
+<div class="row between" style="margin-bottom:14px">
+  <a class="btn ghost sm" href="/kanji">← Library</a>
+  <div class="row">{% if prev %}<a class="btn sm" href="/kanji/{{ prev.char }}" aria-label="Previous kanji {{ prev.char }}">← {{ prev.char }}</a>{% endif %}{% if nextk %}<a class="btn sm" href="/kanji/{{ nextk.char }}" aria-label="Next kanji {{ nextk.char }}">{{ nextk.char }} →</a>{% endif %}</div>
+</div>
+<div class="kd-hero">
+  <div class="stack">
+    <div class="kd-char" lang="ja">{{ k.char }}</div>
+    <div class="row" style="justify-content:center">
+      {% if card %}<span class="pill {{ 'good' if card.state == 'mastered' else 'gold' }}">{{ 'Suspended' if card.suspended else ('New' if not card.total_reviews else card.state|title) }}</span>
+      {% if deck_name %}<a class="pill" href="/browse?deck={{ card.deck_id }}" title="Deck">束 {{ deck_name }}</a>{% endif %}
+      {% else %}<div class="row study-add">
+        <label class="sr" for="study-deck">Deck</label>
+        <select id="study-deck" data-study-deck>{% for d in decks %}<option value="{{ d.id }}">{{ d.name }}</option>{% else %}<option value="0">My kanji (new deck)</option>{% endfor %}</select>
+        <button class="btn primary" type="button" data-study="{{ k.char }}">+ Add to deck</button></div>{% endif %}
+      <a class="btn" href="/write?track=kanji&item={{ k.char }}">筆 Write</a>
+    </div>
+  </div>
+  <div class="stack">
+    <div><div class="eyebrow">#{{ k.idx }} · {{ GRADE_LABELS[k.grade] }} · {{ k.codepoint }}</div><h1 style="margin-bottom:4px">{{ k.meanings }}</h1></div>
+    <div class="facts">
+      <div class="fact"><div class="lbl">On'yomi</div><div class="val readings">{{ k.onyomi or '—' }}</div></div>
+      <div class="fact"><div class="lbl">Kun'yomi</div><div class="val readings">{{ k.kunyomi or '—' }}</div></div>
+      <div class="fact"><div class="lbl">Radical</div><div class="val">{% if k.radical_char %}<a href="/kanji?radical={{ k.radical_num }}" data-radical-link>{{ k.radical_char }}</a> {{ k.radical_name }} <span class="muted small">(#{{ k.radical_num }})</span>{% else %}—{% endif %}</div></div>
+      <div class="fact"><div class="lbl">Strokes</div><div class="val">{{ k.strokes }}{% if kvg_strokes and kvg_strokes != k.strokes %} <span class="muted small" title="KanjiVG draws this kanji with {{ kvg_strokes }} strokes">(KanjiVG: {{ kvg_strokes }})</span>{% endif %}</div></div>
+      {% if k.freq %}<div class="fact"><div class="lbl">Frequency</div><div class="val">#{{ k.freq }} <span class="muted small">of 2,500</span></div></div>{% endif %}
+      {% if user.show_jlpt and k.jlpt_old %}<div class="fact"><div class="lbl">Old JLPT</div><div class="val">Level {{ k.jlpt_old }}</div></div>{% endif %}
+      {% if nanori %}<div class="fact" style="grid-column:1/-1"><div class="lbl">Name readings (nanori)</div><div class="val small jp">{{ nanori }}</div></div>{% endif %}
+    </div>
+    {% if card %}<div class="card flat small"><b>Your progress:</b> {{ card.total_correct }}/{{ card.total_reviews }} reviews correct · {{ card.reps }} in a row ·
+      next review <span data-at="{{ card.due_at }}"></span>{% if prog %} · {{ prog.correct }}/{{ prog.attempts }} answers correct overall{% endif %}
+      <div class="tiny muted">Mastery needs {{ cfg.mastery_reps }} correct in a row, {{ cfg.mastery_accuracy }}% accuracy and a {{ cfg.mastery_interval }}-day interval (change this in Settings).</div></div>{% endif %}
+  </div>
+</div>
+
+<form class="card my-notes" style="margin-top:22px" data-kanji-note data-item="{{ k.char }}">
+  <div class="row between"><h2 style="margin:0">✎ My notes</h2><span class="small muted" data-note-status aria-live="polite">{{ 'Saved' if note else 'Only you can see these. They also show on the back of the card.' }}</span></div>
+  <div class="grid g3" style="margin-top:12px">
+    <div><label for="km">My meaning</label><input id="km" name="meaning" type="text" maxlength="300" value="{{ note.meaning if note else '' }}" placeholder="{{ k.meanings.split('; ')[0] }}"></div>
+    <div><label for="kh">My memory hook</label><textarea id="kh" name="mnemonic" rows="2" maxlength="2000" placeholder="A picture that helps you remember…">{{ note.mnemonic if note else '' }}</textarea></div>
+    <div><label for="kn">Notes</label><textarea id="kn" name="notes" rows="2" maxlength="5000">{{ note.notes if note else '' }}</textarea></div>
+  </div>
+  <div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn primary sm" type="submit">Save notes</button></div>
+</form>
+
+<div class="grid g2" style="margin-top:16px">
+  <div class="card">
+    <h2>Stroke order</h2>
+    <div class="stroke-box" style="max-width:300px;margin:0 auto" data-strokes="/strokes/{{ stroke }}" aria-label="Stroke order diagram for {{ k.char }}"></div>
+    <div class="row" style="justify-content:center;margin-top:12px"><button class="btn sm" type="button" data-play>▶ Play</button><button class="btn sm" type="button" data-step-stroke>Step</button><button class="btn sm" type="button" data-reset-stroke>Reset</button><button class="icon-btn" type="button" data-nums aria-pressed="true" aria-label="Show stroke numbers">#</button></div>
+  </div>
+  <div class="card">
+    <h2>Words</h2>
+    {% if vocab %}{% for v in vocab %}<div class="vocab-item"><a class="w" href="/kanji?q={{ v.word|urlencode }}" data-wordlink>{{ v.word }}</a><span class="small"><b class="jp">{{ v.reading }}</b> — {{ v.meaning }}</span></div>{% endfor %}
+    {% else %}<div class="empty small">No common dictionary words use this kanji on its own. It mostly shows up in names or rarer words.</div>{% endif %}
+  </div>
+</div>
+<div class="grid g2" style="margin-top:16px">
+  <div class="card"><h2>Example sentences</h2>
+    {% if sentences %}{% for s in sentences %}<div style="margin-bottom:14px"><div class="sentence-jp">{{ s.jp }}</div><div class="small muted">{{ s.en }}</div></div>{% endfor %}
+    <p class="tiny muted">From Tatoeba (CC BY 2.0 FR).</p>
+    {% else %}<div class="empty small">No example sentence for this kanji in the dataset yet.</div>{% endif %}</div>
+  <div class="card"><h2>Same radical</h2>
+    {% if related %}<div class="row">{% for r in related %}<a class="btn sm jp" style="font-size:1.3rem" href="/kanji/{{ r.char }}" title="{{ r.meanings.split('; ')[0] }}">{{ r.char }}</a>{% endfor %}</div>
+    {% else %}<div class="empty small">No other Jōyō kanji share this radical.</div>{% endif %}</div>
+</div>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/kanji-detail.js') }}"></script>{% endblock %}

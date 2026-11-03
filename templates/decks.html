@@ -1,0 +1,93 @@
+{% extends "base.html" %}{% block title %}Decks{% endblock %}
+{% block content %}
+<div class="page-head row between">
+  <div><div class="eyebrow">Anki-style study</div><h1>Decks</h1>
+  <p>Each deck sets how many <b>new</b> cards you meet per day and how many <b>reviews</b> you do at most, so it never piles up. The numbers show what's waiting today: <span class="cnt new">new</span> <span class="cnt learn">learning</span> <span class="cnt rev">to review</span>.</p></div>
+  <div class="row"><a class="btn" href="/browse">☰ Browse cards</a><button class="btn primary" type="button" data-open="new-deck">+ New deck</button></div>
+</div>
+{% if saved %}<div class="alert ok" role="status">{{ saved }}</div>{% endif %}
+
+{% if decks %}
+<div class="card deck-wrap" style="padding:6px 0">
+<table class="deck-table">
+  <thead><tr><th>Deck</th><th class="num">New</th><th class="num">Learn</th><th class="num">Due</th><th class="num hide-sm">Cards</th><th></th></tr></thead>
+  <tbody>
+  {% for x in decks %}{% set d = x.d %}
+  <tr data-deck-row="{{ d.id }}">
+    <td><a class="deck-name" href="/review?deck={{ d.id }}">{{ d.name }}</a>
+      <div class="tiny muted">{{ d.new_per_day }} new/day · max {{ d.max_reviews }} reviews/day{% if x.suspended %} · {{ x.suspended }} suspended{% endif %}</div></td>
+    <td class="num"><span class="cnt new">{{ x.new }}</span></td>
+    <td class="num"><span class="cnt learn">{{ x.learn }}</span></td>
+    <td class="num"><span class="cnt rev">{{ x.review }}</span></td>
+    <td class="num hide-sm muted">{{ x.total }}</td>
+    <td class="actions">
+      <a class="btn primary sm" href="/review?deck={{ d.id }}" {% if not (x.new + x.learn + x.review) %}aria-disabled="true" data-empty{% endif %}>Study</a>
+      <div class="menu" data-menu><button class="menu-btn btn sm" type="button" aria-expanded="false" aria-haspopup="true" aria-label="Deck options for {{ d.name }}">⋯</button>
+        <div class="menu-pop">
+          <button type="button" data-open="opts-{{ d.id }}">⚙ Options (limits, name)</button>
+          <button type="button" data-open="grade-{{ d.id }}">字 Add kanji by grade</button>
+          <button type="button" data-open="card-{{ d.id }}">✎ Write a card</button>
+          <a href="/browse?deck={{ d.id }}">☰ Browse this deck</a>
+          <a href="/api/decks/{{ d.id }}/export.apkg" download data-no-prefetch>⇩ Export to Anki (.apkg)</a>
+          <hr><button type="button" data-delete-deck="{{ d.id }}" data-name="{{ d.name }}" data-count="{{ x.total }}">🗑 Delete deck…</button>
+        </div></div>
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<div class="card pad-l empty"><span class="big-glyph">束</span><h2 style="color:var(--ink)">No decks yet</h2>
+<p>Make one, then add a school grade of kanji to it. You'll meet a few new kanji every day.</p>
+<button class="btn primary" type="button" data-open="new-deck">+ Make my first deck</button></div>
+{% endif %}
+
+<div class="grid g2" style="margin-top:16px">
+  <form class="card" data-import-apkg>
+    <h2>Import from Anki</h2>
+    <p class="small muted">Choose an <b>.apkg</b> file (File → Export in Anki, any “Anki Deck Package”). Its cards become a new deck here and start as new cards. Pictures and sound in the deck are skipped.</p>
+    <label for="apkg">Anki deck file</label><input id="apkg" name="file" type="file" accept=".apkg,.colpkg" required>
+    <div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Import</button><span class="small muted" data-import-msg aria-live="polite"></span></div>
+  </form>
+  <div class="card">
+    <h2>Export to Anki</h2>
+    <p class="small muted">Use a deck's ⋯ menu to download it as an <b>.apkg</b> file, then open it in Anki or AnkiDroid. Kanji cards include meanings, readings, stroke count, your notes and memory hooks.</p>
+    <a class="btn" href="/api/decks/all-kanji/export.apkg" download data-no-prefetch>⇩ All 2,136 Jōyō kanji (.apkg)</a>
+  </div>
+</div>
+
+<!-- dialogs -->
+<dialog class="dlg" id="new-deck"><form method="dialog" data-deck-form>
+  <h2>New deck</h2>
+  <label for="nd-name">Name</label><input id="nd-name" name="name" type="text" maxlength="80" required placeholder="e.g. Grade 1 kanji">
+  <div class="grid g2" style="margin-top:12px"><div><label for="nd-new">New cards / day</label><input id="nd-new" name="new_per_day" type="number" min="0" max="9999" value="10"></div>
+  <div><label for="nd-max">Max reviews / day</label><input id="nd-max" name="max_reviews" type="number" min="0" max="9999" value="200"></div></div>
+  <p class="hint">Tip: 5–10 new kanji a day is plenty. Reviews grow with new cards, roughly ×10.</p>
+  <div class="row dlg-actions"><button class="btn" value="cancel" formnovalidate>Cancel</button><button class="btn primary" value="ok">Create</button></div>
+</form></dialog>
+{% for x in decks %}{% set d = x.d %}
+<dialog class="dlg" id="opts-{{ d.id }}"><form method="dialog" data-deck-form data-id="{{ d.id }}">
+  <h2>Deck options</h2>
+  <label for="o-name-{{ d.id }}">Name</label><input id="o-name-{{ d.id }}" name="name" type="text" maxlength="80" required value="{{ d.name }}">
+  <div class="grid g2" style="margin-top:12px"><div><label for="o-new-{{ d.id }}">New cards / day</label><input id="o-new-{{ d.id }}" name="new_per_day" type="number" min="0" max="9999" value="{{ d.new_per_day }}"></div>
+  <div><label for="o-max-{{ d.id }}">Max reviews / day</label><input id="o-max-{{ d.id }}" name="max_reviews" type="number" min="0" max="9999" value="{{ d.max_reviews }}"></div></div>
+  <div class="row dlg-actions"><button class="btn" value="cancel" formnovalidate>Cancel</button><button class="btn primary" value="ok">Save</button></div>
+</form></dialog>
+<dialog class="dlg" id="grade-{{ d.id }}"><form method="dialog" data-grade-form data-id="{{ d.id }}">
+  <h2>Add kanji to “{{ d.name }}”</h2>
+  <p class="small muted">They're added as new cards in school order. You'll meet {{ d.new_per_day }} per day. Kanji already in another deck stay where they are.</p>
+  <label for="g-{{ d.id }}">Grade</label>
+  <select id="g-{{ d.id }}" name="grade">{% for g, l in GRADE_LABELS.items() %}<option value="{{ g }}">{{ l }} ({{ {1:80,2:160,3:200,4:202,5:193,6:191,8:1110}[g] }} kanji)</option>{% endfor %}</select>
+  <div class="row dlg-actions"><button class="btn" value="cancel" formnovalidate>Cancel</button><button class="btn primary" value="ok">Add</button></div>
+</form></dialog>
+<dialog class="dlg" id="card-{{ d.id }}"><form method="dialog" data-card-form data-id="{{ d.id }}">
+  <h2>Write a card</h2>
+  <label for="cf-{{ d.id }}">Front</label><textarea id="cf-{{ d.id }}" name="front" rows="2" maxlength="2000" required></textarea>
+  <label for="cb-{{ d.id }}" style="margin-top:10px">Back</label><textarea id="cb-{{ d.id }}" name="back" rows="3" maxlength="5000" required></textarea>
+  <label for="ce-{{ d.id }}" style="margin-top:10px">Extra <span class="muted">(optional)</span></label><textarea id="ce-{{ d.id }}" name="extra" rows="2" maxlength="5000"></textarea>
+  <div class="row dlg-actions"><button class="btn" value="cancel" formnovalidate>Done</button><button class="btn primary" value="ok">Add card</button></div>
+</form></dialog>
+{% endfor %}
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/decks.js') }}"></script>{% endblock %}

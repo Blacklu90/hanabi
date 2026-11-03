@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% block title %}Writing practice{% endblock %}
+{% block content %}
+<div class="page-head row between"><div><div class="eyebrow">筆 · Writing</div><h1>Writing practice</h1>
+<p>Trace with your mouse, finger or stylus. You decide when it looks right. There's no handwriting recognition, so it's self-checked.</p></div>
+<div class="row"><a class="btn sm {{ 'ink' if track == 'hiragana' }}" href="/write?track=hiragana">ひらがな</a><a class="btn sm {{ 'ink' if track == 'katakana' }}" href="/write?track=katakana">カタカナ</a><a class="btn sm {{ 'ink' if track == 'kanji' }}" href="/write?track=kanji">漢字</a></div></div>
+<div class="write-wrap" data-writing data-track="{{ track }}" data-item="{{ cur.kana }}">
+  <div class="stack">
+    <div class="row between"><div><span class="jp" style="font-size:2rem">{{ cur.kana }}</span> <span class="muted">{{ cur.romaji }}</span></div></div>
+    <div class="canvas-box" data-canvas-box>
+      <div class="guide" data-guide data-src="/strokes/{{ stroke }}"></div>
+      <canvas data-canvas aria-label="Drawing area. Draw {{ cur.kana }} here." role="img"></canvas>
+    </div>
+    <div class="row" style="justify-content:center">
+      <button class="btn sm" type="button" data-undo>↶ Undo</button>
+      <button class="btn sm" type="button" data-clear>Clear</button>
+      <button class="btn sm" type="button" data-toggle-guide aria-pressed="true">Hide guide</button>
+      <button class="btn primary" type="button" data-selfcheck>✓ Looks right</button>
+    </div>
+    <p class="center small muted" data-wmsg aria-live="polite"></p>
+  </div>
+  <div class="stack">
+    <div class="card"><h3>Stroke order</h3>
+      <div class="stroke-box" data-strokes="/strokes/{{ stroke }}" aria-label="Stroke order for {{ cur.kana }}"></div>
+      <div class="row" style="justify-content:center;margin-top:10px"><button class="btn sm" type="button" data-play>▶ Play</button><button class="btn sm" type="button" data-step-stroke>Step</button><button class="btn sm" type="button" data-reset-stroke>Reset</button></div></div>
+    <div class="card"><h3>Pick a character</h3><div class="char-pick">{% for c in chars %}<a href="/write?track={{ track }}&item={{ c.kana|urlencode }}" {% if c.kana == cur.kana %}aria-current="true"{% endif %} title="{{ c.romaji }}">{{ c.kana }}</a>{% endfor %}</div></div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/writing.js') }}"></script>{% endblock %}

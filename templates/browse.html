@@ -1,0 +1,37 @@
+{% extends "base.html" %}{% block title %}Browse cards{% endblock %}
+{% block content %}
+<div class="page-head row between">
+  <div><div class="eyebrow">Anki-style browser</div><h1>Browse cards</h1>
+  <p>Every card in your decks. Search, sort, and select cards to suspend, bury, reset, move or delete them. Click a card to see it or add your notes.</p></div>
+  <a class="btn" href="/decks">← Decks</a>
+</div>
+<form class="card filters browse-filters" data-bfilters role="search" style="margin-bottom:12px">
+  <div class="grow"><label for="bq">Search</label><input id="bq" name="q" type="search" placeholder="Kanji, meaning, reading or your notes" autocomplete="off"></div>
+  <div><label for="bd">Deck</label><select id="bd" name="deck"><option value="0">All decks</option>{% for d in decks %}<option value="{{ d.id }}">{{ d.name }}</option>{% endfor %}</select></div>
+  <div><label for="bs">State</label><select id="bs" name="state"><option value="">Any</option><option value="new">New</option><option value="due">Due now</option><option value="learning">Learning</option><option value="review">Review</option><option value="mastered">Mastered</option><option value="suspended">Suspended</option><option value="buried">Buried</option></select></div>
+  <div><label for="bt">Type</label><select id="bt" name="track"><option value="">All</option><option value="kanji">Kanji</option><option value="dict">Dictionary words</option><option value="card">Imported / written cards</option></select></div>
+  <div><label for="bo">Sort by</label><select id="bo" name="sort"><option value="due">Due date</option><option value="order">Deck order</option><option value="front">Card</option><option value="interval">Interval</option><option value="ease">Ease</option><option value="lapses">Lapses</option><option value="reviews">Reviews</option></select></div>
+  <div><label class="check" style="padding-top:28px"><input type="checkbox" name="desc" value="1"> Reverse</label></div>
+</form>
+<div class="row between browse-bar" data-bulk>
+  <span class="small muted" data-bcount aria-live="polite">Loading…</span>
+  <div class="row">
+    <span class="small" data-bsel>0 selected</span>
+    <button class="btn sm" type="button" data-bulk-act="suspend" disabled>⏸ Suspend</button>
+    <button class="btn sm" type="button" data-bulk-act="unsuspend" disabled>▶ Unsuspend</button>
+    <button class="btn sm" type="button" data-bulk-act="bury" disabled>⏭ Bury</button>
+    <button class="btn sm" type="button" data-bulk-act="forget" disabled>↺ Reset to new</button>
+    <label class="sr" for="move-to">Move to deck</label>
+    <select id="move-to" class="btn sm" data-move disabled><option value="">Move to…</option>{% for d in decks %}<option value="{{ d.id }}">{{ d.name }}</option>{% endfor %}</select>
+    <button class="btn sm" type="button" data-bulk-act="delete" disabled>🗑 Delete</button>
+  </div>
+</div>
+<div class="card table-wrap" style="padding:0">
+  <table class="browse-table">
+    <thead><tr><th><input type="checkbox" data-all aria-label="Select all on this page"></th><th>Card</th><th>Answer</th><th class="hide-sm">Deck</th><th>State</th><th>Due</th><th class="num hide-sm">Interval</th><th class="num hide-sm">Ease</th><th class="num hide-sm">Lapses</th></tr></thead>
+    <tbody data-brows><tr><td colspan="9" class="empty">Loading…</td></tr></tbody>
+  </table>
+</div>
+<div class="pager" data-bpager></div>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/browse.js') }}"></script>{% endblock %}

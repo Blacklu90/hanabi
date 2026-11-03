@@ -1,0 +1,26 @@
+{% extends "base.html" %}{% block title %}{{ a.title }}{% endblock %}
+{% block body_class %}focus{% endblock %}
+{% block content %}
+<div class="study" data-quiz-run data-id="{{ a.id }}" data-mode="{{ a.mode }}" data-start="{{ answered }}" {% if remaining is not none %}data-remaining="{{ remaining }}"{% endif %}>
+  <div class="focus-bar">
+    <a class="exit" href="/quiz" aria-label="Leave quiz">✕</a>
+    <div class="meter" role="progressbar" aria-label="Quiz progress" aria-valuemin="0" aria-valuemax="{{ questions|length }}"><span data-progress style="width:0%"></span></div>
+    <span class="timer" data-qcount></span>
+    {% if remaining is not none %}<span class="timer" data-clock aria-live="off"></span>{% endif %}
+  </div>
+  <p class="eyebrow center">{{ a.title }}</p>
+  <div class="card">
+    <div class="q-prompt">
+      <div data-qprompt lang="ja"></div>
+      <div class="muted" data-qsub></div>
+    </div>
+    <div class="opts" data-opts role="group" aria-label="Answers"></div>
+    <div class="feedback" data-fb role="status" aria-live="polite"></div>
+    <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn primary" type="button" data-nextq hidden>Next <kbd>Enter</kbd></button></div>
+  </div>
+  <p class="shortcuts"><kbd>1</kbd>–<kbd>4</kbd> answer · <kbd>Enter</kbd> next · <kbd>Esc</kbd> leave</p>
+  {% if a.mode == 'mastery' %}<p class="center small muted">Mastery test: 20 questions, pass with 80%.</p>{% endif %}
+</div>
+<script type="application/json" id="quiz-data">{{ jdump(questions) }}</script>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/quiz.js') }}"></script>{% endblock %}

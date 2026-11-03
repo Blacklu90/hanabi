@@ -1,0 +1,36 @@
+{% extends "base.html" %}{% block title %}{{ sc.label }}{% endblock %}
+{% block content %}
+<div class="page-head row between">
+  <div><div class="eyebrow">{{ sc.jp }}</div><h1>{{ sc.label }}</h1>
+  <p>{{ sc.chars|length }} characters in {{ sc.lessons|length }} small lessons. Do them in order or jump around. Each one takes about 3 minutes.</p></div>
+  <div class="seg" role="tablist" aria-label="Script">
+    <a class="btn sm {{ 'ink' if script == 'hiragana' }}" href="/learn/hiragana">ひらがな</a>
+    <a class="btn sm {{ 'ink' if script == 'katakana' }}" href="/learn/katakana">カタカナ</a>
+  </div>
+</div>
+{% if nxt %}
+<a class="card card-link hero-next" href="/learn/{{ script }}/{{ nxt.id }}" style="margin-bottom:22px">
+  <div class="glyph" aria-hidden="true">{{ nxt.chars[0] }}</div>
+  <div><div class="eyebrow" style="margin:0">Next lesson · {{ nxt.id }} of {{ sc.lessons|length }}</div><h2>{{ nxt.title }}</h2><div class="muted jp">{{ nxt.chars|join('　') }}</div></div>
+  <span class="btn primary lg">Start →</span>
+</a>
+{% else %}
+<div class="alert ok">Every {{ sc.label }} lesson is done. Keep it fresh with <a href="/review?track={{ script }}">reviews</a> or a <a href="/quiz">mastery test</a>.</div>
+{% endif %}
+<div class="row" style="margin-bottom:18px"><a class="btn sm" href="/hooks?script={{ script }}">💡 Memory hooks chart</a><a class="btn sm" href="/vocab/{{ script }}">語 {{ sc.label }} words</a><a class="btn sm" href="/write?track={{ script }}">筆 Writing practice</a><a class="btn sm" href="/review?track={{ script }}">↻ Review {{ sc.label }}</a></div>
+{% for gid, gname in groups %}{% set ls = sc.lessons|selectattr('group', 'equalto', gid)|list %}{% if ls %}
+<section style="margin-bottom:28px">
+  <h2>{{ gname }}</h2><p class="small muted" style="max-width:70ch">{{ ls[0].note }}</p>
+  <div class="lesson-list">
+  {% for l in ls %}
+    <a class="card card-link lesson{{ ' done' if l.slug in done }}{{ ' next' if nxt and nxt.id == l.id }}" href="/learn/{{ script }}/{{ l.id }}">
+      <span class="num">{{ '✓' if l.slug in done else l.id }}</span>
+      <span><span class="chars">{{ l.chars|join(' ') }}</span><br><span class="tiny muted">{{ l.title }}</span></span>
+    </a>
+  {% endfor %}
+  </div>
+</section>
+{% endif %}{% endfor %}
+<section class="card"><h2>All characters</h2><p class="small muted">Colour shows where each character is: <span class="pill gold">learning</span> <span class="pill ind">reviewing</span> <span class="pill good">mastered</span></p>
+<div class="kana-grid">{% for c in sc.chars %}<a class="kana-cell {{ states.get(c.kana, '') }}" href="/learn/{{ script }}/{{ c.lesson }}" title="{{ c.romaji }}: {{ c.hook }}"><b>{{ c.kana }}</b>{% if user.show_romaji %}<small>{{ c.romaji }}</small>{% endif %}</a>{% endfor %}</div></section>
+{% endblock %}

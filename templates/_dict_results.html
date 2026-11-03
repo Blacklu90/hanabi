@@ -1,0 +1,40 @@
+{% if q %}
+<p class="small muted" data-dcount aria-live="polite">{% if total %}{{ total }} result{{ '' if total == 1 else 's' }}{% if total > results|length %} · showing the best {{ results|length }}{% endif %}{% else %}No dictionary results{% endif %}{% if mine %} · {{ mine|length }} from your dictionaries{% endif %} · {{ ms }} ms</p>
+{% endif %}
+{% if mine %}
+<section class="card" style="margin-bottom:14px">
+  <h2 class="small eyebrow" style="margin-bottom:6px">From your dictionaries</h2>
+  {% for m in mine %}
+  <div class="dict-mine">
+    <div><span class="dw jp">{{ m.term }}</span>{% if m.reading %} <span class="jp muted">【{{ m.reading }}】</span>{% endif %} <span class="pill">{{ m.dict }}</span></div>
+    <div class="dm small">{{ m.meaning }}</div>
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+{% for e in results %}
+<article class="card dict-entry">
+  <div class="row between" style="align-items:flex-start">
+    <div>
+      <span class="dw jp" lang="ja">{{ e.headword }}</span>
+      {% if e.reading %}<span class="dr jp" lang="ja">{{ e.reading }}</span>{% endif %}
+      {% if user.show_romaji %}<span class="small muted">{{ e.romaji }}</span>{% endif %}
+      {% if e.common %}<span class="pill good">common</span>{% endif %}
+      {% if e.others %}<div class="tiny muted jp">Also written: {{ e.others|join('、') }}</div>{% endif %}
+    </div>
+    <div class="row add-word">
+      {% if (e.id|string) in have %}<span class="pill gold">✓ In a deck</span>
+      {% else %}<label class="sr" for="dk-{{ e.id }}">Deck</label>
+      <select id="dk-{{ e.id }}" class="btn sm" data-add-deck>{% for d in decks %}<option value="{{ d.id }}">{{ d.name }}</option>{% endfor %}<option value="0" {% if not decks %}selected{% endif %}>My words</option></select>
+      <button class="btn sm primary" type="button" data-add-word="{{ e.id }}">+ Add</button>{% endif %}
+    </div>
+  </div>
+  <ol class="senses">
+    {% for s in e.senses %}<li>{% if s.p %}<span class="pos">{{ s.p|join(', ') }}</span> {% endif %}{{ s.g|join('; ') }}{% if s.m %} <span class="tiny muted">({{ s.m|join(', ') }})</span>{% endif %}{% if s.i %} <span class="tiny muted">— {{ s.i }}</span>{% endif %}</li>{% endfor %}
+  </ol>
+  {% if e.kanji %}<div class="row dict-kanji">{% for k in e.kanji %}<a class="btn sm" href="/kanji/{{ k.char }}" title="{{ k.meaning }}"><span class="jp" style="font-size:1.2rem">{{ k.char }}</span> <span class="tiny muted">{{ k.meaning }}</span></a>{% endfor %}</div>{% endif %}
+  {% if e.sentence_jp %}<div class="dict-ex"><span class="jp">{{ e.sentence_jp }}</span><span class="small muted">{{ e.sentence_en }}</span></div>{% endif %}
+</article>
+{% else %}
+{% if q and not mine %}<div class="card empty"><span class="big-glyph">無</span>Nothing found for “{{ q }}”. Try a shorter word, the dictionary form (食べる, not 食べた), or English.</div>{% endif %}
+{% endfor %}

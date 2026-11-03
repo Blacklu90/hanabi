@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% block title %}Matching game{% endblock %}{% block wrap_class %}narrow{% endblock %}
+{% block content %}
+<div class="page-head"><div class="eyebrow">◇ Game</div><h1>Matching</h1><p>Find the six pairs. Fast, and good for a quick brain reset.</p></div>
+<div data-match>
+  <div class="chips" role="group" aria-label="Deck">{% for d, l in decks %}<button class="chip" type="button" data-deck="{{ d }}" aria-pressed="{{ 'true' if loop.first else 'false' }}">{{ l }}</button>{% endfor %}</div>
+  <div class="row between" style="margin:16px 0">
+    <div class="row small"><span class="pill">⏱ <span data-time>0.0</span>s</span><span class="pill">Moves <span data-moves>0</span></span><span class="pill good">Matches <span data-matches>0</span>/6</span><span class="pill acc">Misses <span data-misses>0</span></span></div>
+    <button class="btn sm" type="button" data-restart>↻ Restart</button>
+  </div>
+  <div class="match-board" data-board aria-live="polite"></div>
+  <section class="card done-screen" data-mdone hidden style="margin-top:16px">
+    <div class="big-glyph">◎</div><h2>All matched!</h2><p data-mresult class="muted"></p>
+    <button class="btn primary" type="button" data-restart>Play again</button>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/match.js') }}"></script>{% endblock %}

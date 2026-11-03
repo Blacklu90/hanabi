@@ -1,0 +1,21 @@
+{% extends "base.html" %}{% block title %}Results · {{ a.title }}{% endblock %}{% block wrap_class %}narrow{% endblock %}
+{% block content %}
+<div class="card pad-l done-screen">
+  <div class="eyebrow">{{ a.title }}</div>
+  <div class="score-big">{{ a.score }}<span class="muted" style="font-size:1.6rem">/{{ a.total }}</span></div>
+  <p style="font-size:1.1rem">{{ pct }}% correct{% if a.mode == 'mastery' %} · {% if a.passed %}<b style="color:var(--good)">Passed ✓</b>{% else %}<b>Not yet. You need 80%.</b>{% endif %}{% endif %}</p>
+  <p class="muted">+{{ a.xp_awarded }} XP{% if a.mode.startswith('sprint') %} · {{ (a.finished_at - a.started_at) }}s{% endif %}</p>
+  <div class="row" style="justify-content:center"><button class="btn primary" type="button" data-again='{{ {"kind": a.kind, "mode": a.mode}|tojson }}'>Go again</button><a class="btn" href="/quiz">All quizzes</a><a class="btn" href="/dashboard">Home</a></div>
+  <div class="alert err" data-quiz-err hidden role="alert" style="margin-top:12px"></div>
+</div>
+<div class="card" style="margin-top:16px"><h2>Question by question</h2>
+<ol class="list" style="padding:0">
+{% for r in rows %}
+<li style="align-items:flex-start"><span class="pill {{ 'good' if r.correct else 'acc' }}">{{ '✓' if r.correct else '✗' }}</span>
+  <div style="flex:1"><div class="jp" style="font-size:1.15rem">{{ r.q.prompt }}</div>
+  <div class="small">{% if not r.correct %}Your answer: <b>{{ r.your or '— (no answer)' }}</b> · {% endif %}Correct: <b>{{ r.right }}</b></div>
+  <div class="tiny muted">{{ r.q.explain }}</div></div></li>
+{% endfor %}
+</ol></div>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/quiz.js') }}"></script>{% endblock %}

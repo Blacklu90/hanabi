@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% block title %}{{ SCRIPTS[script].label }} words{% endblock %}
+{% block content %}
+<div class="page-head row between">
+  <div><div class="eyebrow">Vocabulary</div><h1>{{ SCRIPTS[script].label }} words</h1>
+  <p>{{ words|length }} everyday words with meanings from JMdict and real example sentences from Tatoeba. Add the ones you like to your reviews.</p></div>
+  <div class="row"><a class="btn sm {{ 'ink' if script == 'hiragana' }}" href="/vocab/hiragana">ひらがな</a><a class="btn sm {{ 'ink' if script == 'katakana' }}" href="/vocab/katakana">カタカナ</a></div>
+</div>
+<div class="card" style="margin-bottom:16px" data-vocab data-track="{{ track }}">
+  <div class="row">
+    <div style="flex:1;min-width:200px"><label class="sr" for="vq">Search words</label><input id="vq" type="search" placeholder="Search: ねこ, neko, cat…" data-q autocomplete="off"></div>
+    <button class="btn" type="button" data-add-visible>+ Add shown to reviews</button>
+  </div>
+  <div class="chips" style="margin-top:12px" role="group" aria-label="Category">
+    <button class="chip" type="button" aria-pressed="true" data-cat="">All</button>
+    {% for c in cats %}<button class="chip" type="button" aria-pressed="false" data-cat="{{ c }}">{{ c|title }}</button>{% endfor %}
+  </div>
+  <p class="small muted" style="margin:10px 0 0" data-count aria-live="polite">{{ words|length }} words</p>
+</div>
+<div class="vgrid" data-vgrid>
+{% for w in words %}
+  <article class="card vcard" data-word="{{ w.word }}" data-cat="{{ w.category }}" data-s="{{ (w.word ~ ' ' ~ w.romaji ~ ' ' ~ w.meaning ~ ' ' ~ (w.kanji_form or ''))|lower }}">
+    <div class="row between"><span class="w">{{ w.word }}</span></div>
+    <div class="small"><b>{{ w.romaji }}</b>{% if w.kanji_form %} · usually written <span class="jp">{{ w.kanji_form }}</span>{% endif %}</div>
+    <div>{{ w.meaning }}</div>
+    <div class="row small"><span class="pill">{{ w.pos }}</span><span class="pill">{{ w.category }}</span>
+      {% set st = states.get(w.word) %}<button class="btn sm" style="margin-left:auto" type="button" data-add="{{ w.word }}" {% if st %}disabled{% endif %}>{{ '✓ In reviews' if st else '+ Review' }}</button></div>
+    {% if w.sentence_jp %}<div class="ex"><span class="jp">{{ w.sentence_jp }}</span>{{ w.sentence_en }}</div>{% endif %}
+  </article>
+{% endfor %}
+</div>
+<div class="empty" data-empty hidden><span class="big-glyph">無</span>No words match. Try another search or category.</div>
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/vocab.js') }}"></script>{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "base.html" %}{% block title %}Home{% endblock %}
+{% block content %}
+<div class="row between page-head" style="margin-bottom:18px">
+  <div><div class="eyebrow">{{ 'Welcome to Hanabi 🎆' if welcome else ('Today' ) }}</div><h1 style="margin:0">Hi, {{ user.display_name }}</h1></div>
+  <button class="btn ink" data-burst type="button" title="Start a timed focus session">⏱ {{ user.burst_minutes }}-min burst</button>
+</div>
+
+<a class="card card-link hero-next" href="{{ next.url }}">
+  <div class="glyph" aria-hidden="true">{{ next.icon }}</div>
+  <div><div class="eyebrow" style="margin:0">Your next step</div><h2>{{ next.title }}</h2><div class="muted">{{ next.sub }}</div></div>
+  <span class="btn primary lg">Start →</span>
+</a>
+
+<div class="grid g4" style="margin-top:16px">
+  <div class="card row" style="gap:16px">
+    <div class="ring" style="--p: {{ goal_pct }}" role="img" aria-label="Daily goal {{ today_xp }} of {{ goal }} XP"><div><b>{{ today_xp }}</b><span class="tiny muted">/ {{ goal }} XP</span></div></div>
+    <div class="tile"><span class="lbl">Daily goal</span><span class="small">{% if goal_pct >= 100 %}Done for today. Anything more is a bonus ✨{% else %}{{ goal - today_xp }} XP to go{% endif %}</span></div>
+  </div>
+  <div class="card tile"><span class="lbl">Streak</span><span class="big">{{ streak.current }} <span class="small muted">day{{ '' if streak.current == 1 else 's' }}</span></span>
+    <span class="small muted">{% if streak.studied_today %}Today counts ✓{% elif streak.current %}Study today to keep it going (one rest day is fine){% else %}Any study today starts one{% endif %}</span></div>
+  <div class="card tile"><span class="lbl">Level {{ lvl.level }}</span><span class="big">{{ lvl.xp }} <span class="small muted">XP</span></span>
+    <div class="meter gold thin" role="progressbar" aria-valuenow="{{ lvl.pct }}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{ lvl.pct }}%"></span></div><span class="tiny muted">{{ lvl.span - lvl.into }} XP to level {{ lvl.level + 1 }}</span></div>
+  <a class="card card-link tile" href="/review"><span class="lbl">Reviews due</span><span class="big">{{ due }}</span><span class="small muted">{{ 'Queue is clear 🎉' if not due else 'Tap to start' }}</span></a>
+</div>
+
+<div class="grid g2" style="margin-top:16px">
+  <div class="card">
+    <h2>Your journey</h2>
+    {% for t in tracks %}
+    <div style="margin:14px 0">
+      <div class="row between small"><b>{{ t.label }}</b><span class="muted">{{ t.started }} started · {{ t.mastered }} mastered / {{ t.total }}</span></div>
+      <div class="meter" style="margin-top:6px;position:relative" role="progressbar" aria-label="{{ t.label }} started" aria-valuenow="{{ t.pct }}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{ t.pct }}%; background: var(--{{ 'accent' if t.track == 'hiragana' else ('indigo' if t.track == 'katakana' else 'gold') }})"></span></div>
+    </div>
+    {% endfor %}
+    <div class="row" style="margin-top:6px"><a class="btn sm" href="/learn/hiragana">Hiragana</a><a class="btn sm" href="/learn/katakana">Katakana</a><a class="btn sm" href="/kanji">Kanji</a></div>
+  </div>
+  <div class="card">
+    <h2>Coming up</h2>
+    <p class="small muted">Reviews due over the next 7 days</p>
+    {% set mx = (upcoming|max) or 1 %}
+    <div class="bars" role="img" aria-label="Upcoming reviews per day: {{ upcoming|join(', ') }}">
+      {% for n in upcoming %}<div class="b{{ ' today' if loop.first }}"><span>{{ n }}</span><i style="height: {{ (100 * n / mx)|round }}%"></i><span>{{ 'Today' if loop.first else '+' ~ loop.index0 ~ 'd' }}</span></div>{% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="grid g3" style="margin-top:16px">
+  <div class="card"><h3>Recent quizzes</h3>
+    {% if quizzes %}<ul class="list">{% for q in quizzes %}<li><a href="/quiz/{{ q.id }}/results">{{ q.title }}</a><span class="when">{{ q.score }}/{{ q.total }}{% if q.passed %} ✓{% endif %}</span></li>{% endfor %}</ul>
+    {% else %}<div class="empty small">No quizzes yet.<br><a href="/quiz">Try a 10-question one →</a></div>{% endif %}</div>
+  <div class="card"><h3>Recent activity</h3>
+    {% if acts %}<ul class="list small">{% for a in acts %}<li>{{ a.text }}<span class="when" data-ago="{{ a.created_at }}"></span></li>{% endfor %}</ul>
+    {% else %}<div class="empty small">Nothing yet.</div>{% endif %}</div>
+  <div class="card"><h3>Achievements <span class="muted small">{{ n_ach }}/{{ n_ach_total }}</span></h3>
+    {% if recent_ach %}<ul class="list">{% for a in recent_ach %}<li><span class="pill gold">{{ a[3] }}</span>{{ a[1] }}</li>{% endfor %}</ul>
+    {% else %}<div class="empty small">Finish your first lesson to unlock one.</div>{% endif %}
+    <a class="btn sm" href="/achievements">See all</a></div>
+</div>
+{% endblock %}

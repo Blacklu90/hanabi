@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en" data-theme="{{ theme }}" data-palette="{{ user.palette if user else 'hanabi' }}" data-calm="{{ (user.calm_mode if user else 0) }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{% block title %}Hanabi{% endblock %} · 花火</title>
+<meta name="description" content="Hanabi: learn Japanese kana and all 2,136 Jōyō kanji in short, focused bursts.">
+<meta name="csrf" content="{{ csrf }}">
+<meta name="theme-color" content="#f7f3ec" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121318" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="{{ asset('img/icon.svg') }}" type="image/svg+xml">
+<link rel="stylesheet" href="{{ asset('css/app.css') }}">
+<script type="module" src="{{ asset('js/app.js') }}"></script>
+{% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}"{% if user %} data-celebrate="{{ user.celebrations }}" data-romaji="{{ user.show_romaji }}" data-autoplay="{{ user.anki_autoplay }}"{% endif %}>
+<a class="skip" href="#main">Skip to content</a>
+{% set nav = [
+  ('/dashboard', 'Home', '⌂', 'dashboard'), ('/learn/hiragana', 'Learn', 'あ', 'learn'), ('/kanji', 'Kanji', '字', 'kanji'),
+  ('/review', 'Review', '↻', 'review'), ('/quiz', 'Practice', '?', 'quiz'), ('/decks', 'Decks', '束', 'decks'),
+  ('/dictionary', 'Dictionary', '辞', 'dictionary')] %}
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="{{ '/dashboard' if user else '/' }}" aria-label="Hanabi – home">{% include "_logo.html" %}<span>Hanabi</span></a>
+    {% if user %}
+    <nav class="nav" aria-label="Main">
+      {% for href, label, _, sec in nav %}
+      <a href="{{ href }}"{% if section == sec %} aria-current="page"{% endif %}>{{ label }}{% if href == '/review' and due_count %} <span class="badge">{{ due_count }}</span>{% endif %}</a>
+      {% endfor %}
+    </nav>
+    <div class="top-right">
+      {% set lv = user.xp|level %}
+      <a class="xp-chip" href="/progress" title="Level {{ lv.level }} — {{ lv.into }}/{{ lv.span }} XP to next level">Lv {{ lv.level }} · {{ user.xp }} XP</a>
+      <div class="menu" data-menu>
+        <button class="menu-btn" aria-expanded="false" aria-haspopup="true" aria-controls="usermenu">{{ user.display_name[:14] }} ▾</button>
+        <div class="menu-pop" id="usermenu">
+          <a href="/learn/hiragana">あ Hiragana</a>
+          <a href="/learn/katakana">ア Katakana</a>
+          <a href="/hooks">💡 Memory hooks chart</a>
+          <a href="/vocab/hiragana">語 Hiragana words</a>
+          <a href="/vocab/katakana">語 Katakana words</a>
+          <a href="/write">筆 Writing practice</a>
+          <a href="/match">◇ Matching game</a>
+          <a href="/progress">▤ Progress</a>
+          <a href="/browse">☰ Browse cards</a>
+          <a href="/achievements">★ Achievements</a>
+          <hr>
+          <a href="/settings">⚙ Settings</a>
+          <a href="/profile">☺ Profile</a>
+          <a href="/about">ⓘ About &amp; data sources</a>
+          <form method="post" action="/logout"><input type="hidden" name="csrf" value="{{ csrf }}"><button type="submit">⇥ Log out</button></form>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="top-right">
+      <a class="btn ghost sm" href="/login">Log in</a>
+      <a class="btn primary sm" href="/register">Start free</a>
+    </div>
+    {% endif %}
+  </div>
+</header>
+<main id="main" tabindex="-1">
+  <div class="wrap {% block wrap_class %}{% endblock %}">
+  {% block content %}{% endblock %}
+  </div>
+</main>
+<footer><div class="wrap row between"><span>花火 Hanabi — Japanese in short, focused bursts.</span><span><a href="/about">Data sources &amp; licences</a></span></div></footer>
+{% if user %}
+<nav class="tabbar" aria-label="Main (mobile)">
+  {% for href, label, icon, sec in [nav[0], nav[1], nav[3], nav[4], ('/more', 'More', '☰', 'more')] %}
+  {% if href == '/more' %}
+  <a href="#usermenu" data-open-menu><span class="ti" aria-hidden="true">{{ icon }}</span>{{ label }}</a>
+  {% else %}
+  <a href="{{ href }}"{% if section == sec %} aria-current="page"{% endif %}><span class="ti" aria-hidden="true">{{ icon }}</span>{{ label }}{% if href == '/review' and due_count %}<span class="badge">{{ due_count }}</span>{% endif %}</a>
+  {% endif %}
+  {% endfor %}
+</nav>
+{% endif %}
+<div class="toasts" role="status" aria-live="polite"></div>
+{% block scripts %}{% endblock %}
+</body>
+</html>

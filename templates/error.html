@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="card pad-l center" style="max-width:520px;margin:40px auto">
+  <div class="empty" style="padding:10px"><span class="big-glyph">{{ '迷' if code == 404 else '止' }}</span></div>
+  <h1>{{ title }}</h1>
+  {% if message %}<p class="muted">{{ message }}</p>{% endif %}
+  <div class="row" style="justify-content:center"><a class="btn primary" href="{{ '/dashboard' if user else '/' }}">Go home</a>{% if code == 401 %}<a class="btn" href="/login">Log in</a>{% endif %}</div>
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% block title %}Forgot password{% endblock %}
+{% block content %}
+<div class="auth card pad-l">
+  <h1>Reset your password</h1>
+  {% if sent %}
+  <div class="alert ok">If that email has an account, a reset link is on its way. It works for 1 hour.</div>
+  {% if dev_link %}<div class="alert dev"><b>Development mode:</b> no email server is set up (HANABI_SMTP_HOST), so here's the link. Production never shows this.<br><a href="{{ dev_link }}">{{ dev_link }}</a></div>{% endif %}
+  <a class="btn block" href="/login">Back to log in</a>
+  {% else %}
+  <p class="muted">Enter your account email and we'll send you a link.</p>
+  <form method="post" action="/forgot"><input type="hidden" name="csrf" value="{{ csrf }}">
+    <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required></div>
+    <button class="btn primary block" type="submit">Send reset link</button></form>
+  {% endif %}
+</div>
+{% endblock %}

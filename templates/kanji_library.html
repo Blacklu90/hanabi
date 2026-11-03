@@ -1,0 +1,22 @@
+{% extends "base.html" %}{% block title %}Kanji library{% endblock %}
+{% block content %}
+<div class="page-head"><div class="eyebrow">漢字 · Jōyō list</div><h1>Kanji library</h1>
+<p>All 2,136 Jōyō kanji. Search by character, meaning, reading (kana or romaji) or a word, then filter by grade, strokes or radical.</p></div>
+<form class="card filters" data-kfilters role="search" style="margin-bottom:16px">
+  <div class="grow"><label for="kq">Search</label><input id="kq" name="q" type="search" placeholder="日 · sun · にち · nichi · 学校" autocomplete="off"></div>
+  <div><label for="kg">Grade</label><select id="kg" name="grade"><option value="0">All grades</option>{% for g, l in GRADE_LABELS.items() %}<option value="{{ g }}">{{ l }}</option>{% endfor %}</select></div>
+  <div><label for="ks">Strokes</label><select id="ks" name="strokes"><option value="0">Any</option>{% for n in range(1, 30) %}<option>{{ n }}</option>{% endfor %}</select></div>
+  <div><label for="kr">Radical</label><select id="kr" name="radical"><option value="0">Any radical</option>{% for num, ch, nm, n in radicals %}<option value="{{ num }}">{{ ch }} {{ nm }} ({{ n }})</option>{% endfor %}</select></div>
+  <div><label for="kst">Status</label><select id="kst" name="status"><option value="">Everything</option><option value="new">Not started</option><option value="learning">Learning</option><option value="mastered">Mastered</option></select></div>
+  <div><label for="ksort">Sort</label><select id="ksort" name="sort"><option value="grade">School order</option><option value="freq">Most common</option><option value="strokes">Fewest strokes</option></select></div>
+  {% if user.show_jlpt %}<div><label for="kj">Old JLPT</label><select id="kj" name="jlpt"><option value="0">Any</option>{% for n in [4,3,2,1] %}<option value="{{ n }}">Level {{ n }}</option>{% endfor %}</select></div>{% endif %}
+</form>
+<div class="row between" style="margin-bottom:10px"><p class="small muted" data-kcount aria-live="polite" style="margin:0">Loading…</p>
+  <div class="row"><label class="sr" for="bulk-deck">Deck</label>
+    <select id="bulk-deck" class="btn sm" data-bulk-deck>{% for d in decks %}<option value="{{ d.id }}">{{ d.name }}</option>{% endfor %}<option value="new">+ New deck…</option></select>
+    <button class="btn sm" type="button" data-bulk-add>+ Add these results to deck</button></div></div>
+<div class="kanji-grid" data-kgrid aria-busy="true">{% for i in range(24) %}<div class="kcell skeleton"></div>{% endfor %}</div>
+<div class="pager" data-kpager></div>
+{% if user.show_jlpt %}<p class="tiny muted" style="margin-top:16px">“Old JLPT” is the pre-2010 four-level list from KANJIDIC2. It isn't the official Jōyō grading.</p>{% endif %}
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/kanji.js') }}"></script>{% endblock %}

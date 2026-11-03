@@ -1,0 +1,73 @@
+{% extends "base.html" %}{% block title %}{{ deck.name if deck else 'Review' }}{% endblock %}
+{% block body_class %}{{ 'focus' if cards else '' }}{% endblock %}
+{% block content %}
+{% if cards %}
+<div class="study" data-review>
+  <div class="focus-bar">
+    <a class="exit" href="{{ '/decks' if deck else '/dashboard' }}" aria-label="Stop reviewing">✕</a>
+    <div class="meter" role="progressbar" aria-label="Review progress" aria-valuemin="0" aria-valuemax="{{ cards|length }}" aria-valuenow="0"><span data-progress style="width:0%"></span></div>
+    <span class="timer" data-count>0/{{ cards|length }}</span>
+    <span class="timer" data-burst-timer hidden></span>
+  </div>
+  {% if deck %}<p class="eyebrow center">Deck · {{ deck.name }}</p>{% endif %}
+  <div class="card flash" data-card aria-live="polite">
+    <span class="tag pill" data-track></span>
+    <div class="tag2 row card-tools">
+      <button class="icon-btn" type="button" data-undo hidden title="Undo last answer (Z)" aria-label="Undo last answer">↶</button>
+      <div class="menu" data-menu><button class="menu-btn icon-btn" type="button" aria-expanded="false" aria-haspopup="true" aria-label="Card actions">⋯</button>
+        <div class="menu-pop">
+          <button type="button" data-act="edit">✎ Edit my notes <kbd>E</kbd></button>
+          <button type="button" data-act="bury">⏭ Bury until tomorrow <kbd>-</kbd></button>
+          <button type="button" data-act="suspend">⏸ Suspend card <kbd>@</kbd></button>
+        </div></div>
+    </div>
+    <div class="glyph" data-front lang="ja"></div>
+    <iframe class="anki-frame" data-anki-frame hidden sandbox="allow-same-origin" title="Card" loading="eager"></iframe>
+    <div data-back hidden class="reveal">
+      <div class="answer" data-answer></div>
+      <div class="reading jp" data-reading></div>
+      <div class="small muted" data-extra></div>
+      <p class="hook" data-hook hidden><span class="hook-ic" aria-hidden="true">💡</span><span data-hook-text></span></p>
+      <p class="hook mine" data-mine hidden><span class="hook-ic" aria-hidden="true">✎</span><span data-mine-text></span></p>
+      <a class="small" data-link hidden>Open details →</a>
+    </div>
+  </div>
+  <div data-show-wrap style="margin-top:16px"><button class="btn primary lg block" type="button" data-show>Show answer <kbd>Space</kbd></button></div>
+  <div class="rate" data-rate hidden role="group" aria-label="How well did you know it?">
+    <button class="btn again" type="button" data-r="1">Again<small data-iv="1"></small></button>
+    <button class="btn" type="button" data-r="2">Hard<small data-iv="2"></small></button>
+    <button class="btn good" type="button" data-r="3">Good<small data-iv="3"></small></button>
+    <button class="btn" type="button" data-r="4">Easy<small data-iv="4"></small></button>
+  </div>
+  <p class="shortcuts"><kbd>Space</kbd> reveal · <kbd>1</kbd>–<kbd>4</kbd> rate · <kbd>Z</kbd> undo · <kbd>R</kbd> replay audio · <kbd>E</kbd> edit · <kbd>Esc</kbd> stop</p>
+  <section class="card done-screen" data-done hidden>
+    <div class="big-glyph">花</div><h2>{{ 'Done for today!' if deck else 'Queue cleared!' }}</h2>
+    <p class="muted" data-done-msg></p>
+    <div class="row" style="justify-content:center"><a class="btn primary lg" href="{{ '/decks' if deck else '/dashboard' }}">{{ 'Back to decks' if deck else 'Back home' }}</a><button class="btn lg" type="button" data-more-quiz>Quick quiz →</button></div>
+    <p class="small muted" style="margin-top:14px">Good moment for a stretch or a glass of water 💧</p>
+  </section>
+</div>
+<dialog class="dlg" id="edit-note"><form method="dialog" data-note-form>
+  <h2>My notes for <span data-note-title class="jp"></span></h2>
+  <label for="n-meaning">My meaning <span class="muted">(replaces the answer on the card)</span></label><input id="n-meaning" name="meaning" type="text" maxlength="300">
+  <label for="n-mnemonic" style="margin-top:10px">My memory hook</label><textarea id="n-mnemonic" name="mnemonic" rows="2" maxlength="2000"></textarea>
+  <label for="n-notes" style="margin-top:10px">Notes</label><textarea id="n-notes" name="notes" rows="3" maxlength="5000"></textarea>
+  <div class="row dlg-actions"><button class="btn" value="cancel" formnovalidate>Cancel</button><button class="btn primary" value="ok">Save</button></div>
+</form></dialog>
+<script type="application/json" id="review-data">{{ jdump(cards) }}</script>
+{% else %}
+<div class="page-head"><div class="eyebrow">{{ 'Deck · ' ~ deck.name if deck else 'Spaced repetition' }}</div><h1>{{ 'Done for today' if deck else 'Review' }}</h1></div>
+<div class="card pad-l empty">
+  <span class="big-glyph">空</span>
+  <h2 style="color:var(--ink)">Nothing due right now 🎉</h2>
+  <p>{% if deck %}This deck's new and review limits for today are used up, or nothing is due yet.{% elif next_due %}Your next review is due <b data-at="{{ next_due }}"></b>.{% else %}Finish a lesson or add kanji or words, and they'll show up here.{% endif %}</p>
+  <div class="row" style="justify-content:center"><a class="btn primary" href="{{ '/decks' if deck else '/dashboard' }}">{{ 'Back to decks' if deck else 'Find something new' }}</a><a class="btn" href="/quiz">Practice quiz</a></div>
+</div>
+{% endif %}
+{% if counts and not deck %}<div class="chips" style="margin-top:16px;justify-content:center" aria-label="Filter by type">
+  <a class="chip" href="/review" aria-pressed="{{ 'true' if not track else 'false' }}">All</a>
+  {% for t, n in counts.items() %}<a class="chip" href="/review?track={{ t }}" aria-pressed="{{ 'true' if track == t else 'false' }}">{{ labels[t] }} · {{ n }}</a>{% endfor %}
+  <a class="chip" href="/decks">Decks →</a>
+</div>{% endif %}
+{% endblock %}
+{% block scripts %}<script type="module" src="{{ asset('js/review.js') }}"></script>{% endblock %}
