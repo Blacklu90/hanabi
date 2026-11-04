@@ -18,6 +18,7 @@
     <div>
       <span class="dw jp" lang="ja">{{ e.headword }}</span>
       {% if e.reading %}<span class="dr jp" lang="ja">{{ e.reading }}</span>{% endif %}
+      <button class="say" type="button" data-say="{{ e.headword }}" data-reading="{{ e.reading or '' }}" aria-label="Hear {{ e.headword }}" title="Hear it">▶</button>
       {% if user.show_romaji %}<span class="small muted">{{ e.romaji }}</span>{% endif %}
       {% if e.common %}<span class="pill good">common</span>{% endif %}
       {% if e.others %}<div class="tiny muted jp">Also written: {{ e.others|join('、') }}</div>{% endif %}

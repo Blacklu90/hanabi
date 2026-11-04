@@ -1,8 +1,18 @@
-{% extends "base.html" %}{% block title %}{{ deck.name if deck else 'Review' }}{% endblock %}
+{% extends "base.html" %}{% block title %}{{ 'Practice · ' if practice else '' }}{{ deck.name if deck else ('Practice' if practice else 'Review') }}{% endblock %}
 {% block body_class %}{{ 'focus' if cards else '' }}{% endblock %}
 {% block content %}
+{% if practice %}
+<form class="practice-bar" method="get" action="/practice" data-practice-form>
+  <span class="eyebrow" style="margin:0">Practice · doesn't change your reviews</span>
+  {% if practice.decks %}<label class="sr" for="pr-deck">Deck</label><select id="pr-deck" name="deck">{% for d in practice.decks %}<option value="{{ d.id }}"{% if d.id == practice.deck_id %} selected{% endif %}>{{ d.name }}</option>{% endfor %}</select>{% endif %}
+  <label class="sr" for="pr-pick">Which words</label><select id="pr-pick" name="pick">{% for k, v in practice.picks.items() %}<option value="{{ k }}"{% if k == practice.pick %} selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+  <label for="pr-n">Words: <b data-pr-n-out>{{ practice.n }}</b></label><input id="pr-n" name="n" type="range" min="1" max="20" value="{{ practice.n }}">
+  <button class="btn sm" type="submit">Go</button>
+</form>
+{% if practice.pick == 'today' and practice.used == 'new' %}<p class="small muted center">You haven't studied anything yet today, so here are your next new words.</p>{% endif %}
+{% endif %}
 {% if cards %}
-<div class="study" data-review>
+<div class="study" data-review{% if practice %} data-practice="1" data-practice-n="{{ practice.n }}"{% endif %}>
   <div class="focus-bar">
     <a class="exit" href="{{ '/decks' if deck else '/dashboard' }}" aria-label="Stop reviewing">✕</a>
     <div class="meter" role="progressbar" aria-label="Review progress" aria-valuemin="0" aria-valuemax="{{ cards|length }}" aria-valuenow="0"><span data-progress style="width:0%"></span></div>
@@ -17,8 +27,8 @@
       <div class="menu" data-menu><button class="menu-btn icon-btn" type="button" aria-expanded="false" aria-haspopup="true" aria-label="Card actions">⋯</button>
         <div class="menu-pop">
           <button type="button" data-act="edit">✎ Edit my notes <kbd>E</kbd></button>
-          <button type="button" data-act="bury">⏭ Bury until tomorrow <kbd>-</kbd></button>
-          <button type="button" data-act="suspend">⏸ Suspend card <kbd>@</kbd></button>
+          {% if not practice %}<button type="button" data-act="bury">⏭ Bury until tomorrow <kbd>-</kbd></button>
+          <button type="button" data-act="suspend">⏸ Suspend card <kbd>@</kbd></button>{% endif %}
         </div></div>
     </div>
     <div class="glyph" data-front lang="ja"></div>
@@ -38,19 +48,39 @@
     </div>
   </div>
   <div data-show-wrap style="margin-top:16px"><button class="btn primary lg block" type="button" data-show>Show answer <kbd>Space</kbd></button></div>
+  {% if practice %}
+  <div class="rate practice-rate" data-rate hidden role="group" aria-label="Did you know it?">
+    <button class="btn again" type="button" data-r="1">Again<small>show it again</small></button>
+    <button class="btn good" type="button" data-r="3">Got it<small>&nbsp;</small></button>
+  </div>
+  {% else %}
   <div class="rate" data-rate hidden role="group" aria-label="How well did you know it?">
     <button class="btn again" type="button" data-r="1">Again<small data-iv="1"></small></button>
     <button class="btn" type="button" data-r="2">Hard<small data-iv="2"></small></button>
     <button class="btn good" type="button" data-r="3">Good<small data-iv="3"></small></button>
     <button class="btn" type="button" data-r="4">Easy<small data-iv="4"></small></button>
   </div>
-  <p class="shortcuts"><kbd>Space</kbd> reveal · <kbd>1</kbd>–<kbd>4</kbd> rate · <kbd>Z</kbd> undo · <kbd>R</kbd> replay audio · <kbd>E</kbd> edit · <kbd>Esc</kbd> stop</p>
+  {% endif %}
+  {% if practice %}<p class="shortcuts"><kbd>Space</kbd> reveal · <kbd>1</kbd> again · <kbd>3</kbd> got it · <kbd>R</kbd> hear it · <kbd>Esc</kbd> stop</p>
+  {% else %}<p class="shortcuts"><kbd>Space</kbd> reveal · <kbd>1</kbd>–<kbd>4</kbd> rate · <kbd>Z</kbd> undo · <kbd>R</kbd> hear it · <kbd>E</kbd> edit · <kbd>Esc</kbd> stop</p>{% endif %}
+  {% if practice %}
+  <section class="card done-screen" data-done hidden>
+    <div class="big-glyph">練</div><h2>Round done!</h2>
+    <p class="muted" data-done-msg></p>
+    <div class="row" style="justify-content:center">
+      <button class="btn primary lg" type="button" data-repeat>↻ Repeat these {{ cards|length }} <kbd>Enter</kbd></button>
+      <a class="btn lg" href="/practice?deck={{ practice.deck_id }}&amp;track={{ practice.track }}&amp;pick={{ practice.used }}&amp;n={{ practice.n }}&amp;start={{ practice.start + practice.n }}">Next {{ practice.n }} →</a>
+    </div>
+    <p class="small muted" style="margin-top:14px">Practice as often as you like. Your review schedule only changes in normal reviews.</p>
+  </section>
+  {% else %}
   <section class="card done-screen" data-done hidden>
     <div class="big-glyph">花</div><h2>{{ 'Done for today!' if deck else 'Queue cleared!' }}</h2>
     <p class="muted" data-done-msg></p>
     <div class="row" style="justify-content:center"><a class="btn primary lg" href="{{ '/decks' if deck else '/dashboard' }}">{{ 'Back to decks' if deck else 'Back home' }}</a><button class="btn lg" type="button" data-more-quiz>Quick quiz →</button></div>
     <p class="small muted" style="margin-top:14px">Good moment for a stretch or a glass of water 💧</p>
   </section>
+  {% endif %}
 </div>
 <dialog class="dlg" id="edit-note"><form method="dialog" data-note-form>
   <h2>My notes for <span data-note-title class="jp"></span></h2>
@@ -61,6 +91,10 @@
 </form></dialog>
 <script type="application/json" id="review-data">{{ jdump(cards) }}</script>
 {% else %}
+{% if practice %}
+<div class="card pad-l empty"><span class="big-glyph">練</span><h2 style="color:var(--ink)">No words to practise here</h2>
+<p>{% if practice.start %}You've gone through all of them. <a href="?deck={{ practice.deck_id }}&amp;pick={{ practice.pick }}&amp;n={{ practice.n }}">Start from the beginning</a>.{% else %}Pick another deck or “Random from the deck” above, or add words first.{% endif %}</p></div>
+{% else %}
 <div class="page-head"><div class="eyebrow">{{ 'Deck · ' ~ deck.name if deck else 'Spaced repetition' }}</div><h1>{{ 'Done for today' if deck else 'Review' }}</h1></div>
 <div class="card pad-l empty">
   <span class="big-glyph">空</span>
@@ -68,6 +102,7 @@
   <p>{% if deck %}This deck's new and review limits for today are used up, or nothing is due yet.{% elif next_due %}Your next review is due <b data-at="{{ next_due }}"></b>.{% else %}Finish a lesson or add kanji or words, and they'll show up here.{% endif %}</p>
   <div class="row" style="justify-content:center"><a class="btn primary" href="{{ '/decks' if deck else '/dashboard' }}">{{ 'Back to decks' if deck else 'Find something new' }}</a><a class="btn" href="/quiz">Practice quiz</a></div>
 </div>
+{% endif %}
 {% endif %}
 {% if counts and not deck %}<div class="chips" style="margin-top:16px;justify-content:center" aria-label="Filter by type">
   <a class="chip" href="/review" aria-pressed="{{ 'true' if not track else 'false' }}">All</a>

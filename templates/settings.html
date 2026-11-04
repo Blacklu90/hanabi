@@ -27,6 +27,12 @@
     <label class="check"><input type="checkbox" name="anki_autoplay" value="1" {% if user.anki_autoplay %}checked{% endif %}> Play audio from imported Anki decks automatically (like Anki; press R to replay)</label>
     <div class="field"><label for="timezone">Time zone (for streaks and daily goals)</label><input id="timezone" name="timezone" type="text" value="{{ user.timezone }}" data-tz-field><div class="hint">e.g. Europe/Berlin. <button class="btn ghost sm" type="button" data-tz-detect>Use this device's</button></div></div>
   </div>
+  <div class="card" data-voice-card><h2>Voice</h2>
+    <p class="small">Every ▶ button plays a word. Shuinkan uses, in this order: the recording from <b>your own Anki decks</b> (if a deck you imported has audio for that word), then the <b>built-in voice</b>, then your device's Japanese voice.</p>
+    <p class="small" data-voice-state aria-live="polite">Checking…</p>
+    <button class="btn" type="button" data-voice-install hidden>Install the built-in voice (about 130 MB, once)</button>
+    <p class="tiny muted">The built-in voice works offline. {{ voice_credit }}</p>
+  </div>
   <div class="card" data-android-only hidden><h2>Daily reminder</h2>
     <label class="check"><input type="checkbox" data-remind-on> Remind me once a day when something is waiting</label>
     <div class="field"><label for="remind-time">Time</label><input id="remind-time" type="time" value="19:00" data-remind-time></div>

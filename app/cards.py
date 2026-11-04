@@ -61,6 +61,11 @@ def build(c, u, rows: list[dict], now: int | None = None) -> list[dict]:
             if t == "kanji":  # show the kanji at work in real words
                 v["words"] = [{"word": w["word"], "reading": w["reading"], "meaning": w["meaning"].split("; ")[0]}
                               for w in words.for_kanji(item, 3)]
+        # What the ▶ button says (imported Anki cards play their own recordings instead).
+        if t == "dict":
+            v["say"] = {"text": row.headword, "reading": row.reading}
+        elif t in ("hword", "kword", "hvocab", "kvocab", "hiragana", "katakana"):
+            v["say"] = {"text": v["front"], "reading": ""}
         note = notes.get((t, item))
         if note and note.meaning:
             v["answer"] = note.meaning

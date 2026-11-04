@@ -22,6 +22,7 @@
     <td class="num hide-sm muted">{{ x.total }}</td>
     <td class="actions">
       <a class="btn primary sm" href="/review?deck={{ d.id }}" {% if not (x.new + x.learn + x.review) %}aria-disabled="true" data-empty{% endif %}>Study</a>
+      <a class="btn sm" href="/practice?deck={{ d.id }}" title="Repeat a few words as often as you like">練 Practice</a>
       <div class="menu" data-menu><button class="menu-btn btn sm" type="button" aria-expanded="false" aria-haspopup="true" aria-label="Deck options for {{ d.name }}">⋯</button>
         <div class="menu-pop">
           <button type="button" data-open="opts-{{ d.id }}">⚙ Options (limits, name)</button>

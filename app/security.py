@@ -84,7 +84,7 @@ def csp_header() -> str:
         "img-src 'self' data:",
         "font-src 'self'",
         "connect-src 'self'",
-        "media-src 'none'",
+        "media-src 'self'",  # word recordings and the built-in voice
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self'",

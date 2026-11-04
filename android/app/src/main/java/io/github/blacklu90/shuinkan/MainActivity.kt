@@ -14,6 +14,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.os.SystemClock
 import android.provider.MediaStore
+import android.speech.tts.TextToSpeech
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
@@ -42,7 +43,11 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import org.json.JSONObject
+import java.util.Locale
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
@@ -61,6 +66,8 @@ class MainActivity : ComponentActivity() {
     @Volatile private var currentUrl: String = ""
     private var lastBack = 0L
     private var pendingReminder: Triple<Boolean, Int, Int>? = null
+    private var tts: TextToSpeech? = null
+    @Volatile private var ttsReady = false
 
     private val pickFile = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         fileCallback?.onReceiveValue(if (uri != null) arrayOf(uri) else null)
@@ -79,7 +86,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Start the app's server first, while the window is still being built.
-        val startPath = intent?.getStringExtra(EXTRA_OPEN) ?: lastPage()
+        val startPath = linkPath(intent) ?: intent?.getStringExtra(EXTRA_OPEN) ?: lastPage()
         val restoring = savedInstanceState != null && ShuinkanServer.port != 0
         if (!restoring) Thread {
             try {
@@ -159,9 +166,23 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /** shuinkan://sync?a=…&c=… (a sync QR code scanned with the phone's camera) -> the Sync page, which joins. */
+    private fun linkPath(i: Intent?): String? {
+        val d = i?.data ?: return null
+        if (d.scheme != "shuinkan" || d.host != "sync") return null
+        val a = d.getQueryParameter("a") ?: return null
+        val c = d.getQueryParameter("c") ?: return null
+        return "/sync?a=" + Uri.encode(a) + "&c=" + Uri.encode(c)
+    }
+
+    override fun onDestroy() {
+        tts?.shutdown()
+        super.onDestroy()
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        val path = intent.getStringExtra(EXTRA_OPEN) ?: return
+        val path = linkPath(intent) ?: intent.getStringExtra(EXTRA_OPEN) ?: return
         if (ShuinkanServer.port != 0) web.loadUrl("http://127.0.0.1:${ShuinkanServer.port}$path")
     }
 
@@ -231,6 +252,38 @@ class MainActivity : ComponentActivity() {
             runOnUiThread { setBarColors(c, dark) }
         }
 
+        /** Say a word with the phone's Japanese voice. Returns false if the phone has none. */
+        @JavascriptInterface
+        fun speak(text: String): Boolean {
+            if (!ours()) return false
+            val t = tts
+            if (t == null) {
+                runOnUiThread { initTts(text) }
+                return true
+            }
+            if (!ttsReady) return true
+            val ok = t.isLanguageAvailable(Locale.JAPANESE) >= TextToSpeech.LANG_AVAILABLE
+            if (ok) t.speak(text.take(200), TextToSpeech.QUEUE_FLUSH, null, "say")
+            return ok
+        }
+
+        /** Scan a sync QR code with Google's scanner (no camera permission needed). */
+        @JavascriptInterface
+        fun scanQr() {
+            if (!ours()) return
+            runOnUiThread {
+                val opts = GmsBarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build()
+                GmsBarcodeScanning.getClient(this@MainActivity, opts).startScan()
+                    .addOnSuccessListener { code ->
+                        val raw = code.rawValue ?: return@addOnSuccessListener
+                        web.evaluateJavascript("window.onShuinkanScan && window.onShuinkanScan(${JSONObject.quote(raw)})", null)
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(this@MainActivity, R.string.scan_failed, Toast.LENGTH_LONG).show()
+                    }
+            }
+        }
+
         @JavascriptInterface
         fun getReminder(): String {
             val r = Reminders.load(this@MainActivity)
@@ -251,6 +304,22 @@ class MainActivity : ComponentActivity() {
                     Reminders.save(this@MainActivity, enabled, h, m)
                 }
             }
+        }
+    }
+
+    private fun initTts(first: String?) {
+        if (tts != null) return
+        tts = TextToSpeech(applicationContext) { status ->
+            ttsReady = status == TextToSpeech.SUCCESS
+            val t = tts ?: return@TextToSpeech
+            if (!ttsReady) return@TextToSpeech
+            val r = t.setLanguage(Locale.JAPANESE)
+            if (r == TextToSpeech.LANG_MISSING_DATA || r == TextToSpeech.LANG_NOT_SUPPORTED) {
+                runOnUiThread { Toast.makeText(this, R.string.no_japanese_voice, Toast.LENGTH_LONG).show() }
+                return@TextToSpeech
+            }
+            t.setSpeechRate(0.9f)
+            if (!first.isNullOrBlank()) t.speak(first.take(200), TextToSpeech.QUEUE_FLUSH, null, "say")
         }
     }
 

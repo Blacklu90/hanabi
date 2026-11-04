@@ -11,7 +11,9 @@
       <button class="btn primary lg block" type="button" data-host-start>Let another device connect</button>
     </div>
     <div data-host-on hidden>
-      <p class="eyebrow" style="margin:0">Code</p>
+      <div class="sync-qr"><img data-qr alt="QR code for syncing. Scan it with Shuinkan on your phone." width="240" height="240"></div>
+      <p class="small muted center" style="margin-top:4px">On your phone: <b>Sync devices → Scan QR code</b> (or point the camera at it).</p>
+      <p class="eyebrow" style="margin:0">Or type this code</p>
       <p class="sync-code" data-code lang="en"></p>
       <p class="eyebrow" style="margin:0">Address</p>
       <p class="sync-addr" data-addr></p>
@@ -23,7 +25,8 @@
 
   <form class="card" data-join>
     <h2>2 · On the other device</h2>
-    <p class="small muted">Type the address and code shown on the first device.</p>
+    <button class="btn primary lg block" type="button" data-scan hidden>⌗ Scan QR code</button>
+    <p class="small muted">Or type the address and code shown on the first device.</p>
     <div class="field"><label for="j-addr">Address</label><input id="j-addr" name="address" type="text" inputmode="url" placeholder="192.168.1.23:8770" autocomplete="off" required></div>
     <div class="field"><label for="j-code">Code</label><input id="j-code" name="code" type="text" placeholder="K7Q4M-2XDHP" autocomplete="off" autocapitalize="characters" spellcheck="false" required></div>
     <button class="btn primary lg block" type="submit">Sync now</button>

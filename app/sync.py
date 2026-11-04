@@ -513,6 +513,24 @@ def start_host(uid: int, bind: str = "0.0.0.0") -> HostSession:
         return sess
 
 
+def qr_link(sess: "HostSession") -> str:
+    addrs = ",".join(f"{ip}:{sess.port}" for ip in lan_addresses())
+    return f"shuinkan://sync?a={addrs}&c={norm_code(sess.code)}"
+
+
+def qr_svg(uid: int) -> bytes | None:
+    """The pairing link as a QR code (scan it with Shuinkan on the phone, or the phone's camera)."""
+    import io as _io
+    import segno
+    sess = _host.get(uid)
+    if not sess or not sess.alive():
+        return None
+    buf = _io.BytesIO()
+    segno.make(qr_link(sess), error="m").save(buf, kind="svg", scale=7, border=3, dark="#1f1c19", light="#ffffff",
+                                              title="Shuinkan sync code")
+    return buf.getvalue()
+
+
 def host_status(uid: int) -> dict | None:
     sess = _host.get(uid)
     if not sess:
@@ -559,12 +577,24 @@ def parse_address(addr: str) -> tuple[str, int]:
 
 
 def join(uid: int, address: str, code: str) -> dict:
-    """Connect to a hosting device, send our data, merge theirs. Returns {'peer', 'sent', 'received'}."""
+    """Connect to a hosting device, send our data, merge theirs. Returns {'peer', 'received'}.
+
+    `address` may list several addresses separated by commas (a QR code carries all of the host's); the first one
+    that answers is used."""
     if len(norm_code(code)) != 10:
         raise SyncError("The code has 10 letters and numbers, like K7Q4M-2XDHP.")
-    host, port = parse_address(address)
-    base = f"http://{host}:{port}/shuinkan-sync"
-    hello = json.loads(_post(base + "/hello", b"{}", 10))
+    candidates = [a for a in (x.strip() for x in address.split(",")) if a][:6] or [address]
+    last = None
+    for a in candidates:
+        host, port = parse_address(a)
+        base = f"http://{host}:{port}/shuinkan-sync"
+        try:
+            hello = json.loads(_post(base + "/hello", b"{}", 6 if len(candidates) > 1 else 10))
+            break
+        except SyncError as e:
+            last = e
+    else:
+        raise last or SyncError("Couldn't reach the other device.")
     if hello.get("v") != VERSION:
         raise SyncError("The other device runs a different version of Shuinkan. Update both, then try again.")
     keys = derive(code, base64.b64decode(hello["salt"]))

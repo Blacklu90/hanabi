@@ -6,6 +6,10 @@
     <!-- Optional daily reminder (asked only when you turn it on). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Lets the app find the phone's text-to-speech engine (Android 11+ package visibility). -->
+    <queries>
+        <intent><action android:name="android.intent.action.TTS_SERVICE" /></intent>
+    </queries>
 
     <application
         android:allowBackup="true"
@@ -24,6 +28,13 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- Sync QR codes: shuinkan://sync?a=<address>&c=<code> -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="shuinkan" android:host="sync" />
             </intent-filter>
         </activity>
         <receiver android:name=".ReminderReceiver" android:exported="false" />

@@ -20,4 +20,6 @@
         <item quantity="one">%d review is waiting — about a minute.</item>
         <item quantity="other">%d reviews are waiting.</item>
     </plurals>
+    <string name="scan_failed">Couldn\'t scan. Type the address and code instead.</string>
+    <string name="no_japanese_voice">Your phone has no Japanese voice yet. Add one in Settings → Language → Text-to-speech.</string>
 </resources>

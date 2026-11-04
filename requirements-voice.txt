@@ -1,0 +1,7 @@
+# The built-in Japanese voice (Open JTalk + HTS voice "Mei"). Bundled into the Windows build; on Linux the app
+# downloads these same versions once (app/voice.py PINNED, checked against this file by the tests).
+pyopenjtalk-plus==0.4.1.post10
+sudachipy==0.7.0
+sudachidict_core==20261015
+numpy==2.5.4
+typing_extensions==4.16.0

@@ -571,6 +571,52 @@ def review_page(request: Request, track: str = "", burst: int = 0, deck: int = 0
                                            "deck": deck_row, "labels": cards.TRACK_LABELS})
 
 
+PRACTICE_PICKS = {"today": "Today's words", "new": "Next new words", "recent": "Words I'm learning", "random": "Random from the deck"}
+
+
+@router.get("/practice")
+def practice_page(request: Request, deck: int = 0, n: int = 5, pick: str = "today", start: int = 0, track: str = ""):
+    """Repeat a small set of words as often as you like. Nothing here changes your review schedule."""
+    import random as _random
+    u = page_user(request)
+    n = max(1, min(int(n), 20))
+    start = max(0, int(start))
+    pick = pick if pick in PRACTICE_PICKS else "today"
+    now = int(time.time())
+    sc = db.srs_cards.c
+    with db.ro() as c:
+        deck_row = c.execute(select(db.decks).where(db.decks.c.id == deck, db.decks.c.user_id == u["id"])).first() if deck else None
+        cond = [sc.user_id == u["id"], sc.suspended == 0]
+        if deck_row:
+            cond.append(sc.deck_id == deck_row.id)
+        elif track in cards.TRACK_LABELS:
+            cond.append(sc.track == track)
+        base = select(db.srs_cards).where(*cond)
+        used = pick
+        rows = []
+        if pick == "today":
+            today = srs.day_start(u["timezone"], now)
+            rows = c.execute(base.where(sc.introduced_at >= today).order_by(sc.introduced_at, sc.position).offset(start).limit(n)).all()
+            if not rows and start == 0:
+                used = "new"  # nothing studied yet today: start with the next new words
+        if used == "new":
+            rows = c.execute(base.where(sc.total_reviews == 0).order_by(sc.position, sc.id).offset(start).limit(n)).all()
+        elif used == "recent":
+            rows = c.execute(base.where(sc.total_reviews > 0).order_by(sc.introduced_at.desc(), sc.id.desc()).offset(start).limit(n)).all()
+        elif used == "random":
+            ids = list(c.execute(select(sc.id).where(*cond)).scalars())
+            pickset = _random.sample(ids, min(n, len(ids)))
+            rows = c.execute(base.where(sc.id.in_(pickset))).all() if pickset else []
+        data = cards.build(c, u, [dict(r._mapping) for r in rows], now)
+        decks = c.execute(select(db.decks.c.id, db.decks.c.name).where(db.decks.c.user_id == u["id"]).order_by(db.decks.c.name)).all()
+    return render(request, "review.html", {
+        "cards": data, "track": track, "counts": {}, "burst": False, "next_due": None, "now": now,
+        "burst_minutes": u["burst_minutes"], "deck": deck_row, "labels": cards.TRACK_LABELS,
+        "practice": {"n": n, "pick": pick, "used": used, "start": start, "picks": PRACTICE_PICKS, "decks": decks,
+                     "track": track, "deck_id": deck_row.id if deck_row else 0},
+    })
+
+
 @router.get("/quiz")
 def quiz_center(request: Request):
     u = page_user(request)
@@ -719,10 +765,15 @@ SETTING_RANGES = {"daily_goal": (10, 500), "mastery_accuracy": (70, 100), "maste
                   "mastery_interval": (1, 365), "burst_minutes": (2, 25)}
 
 
+def _voice_credit() -> str:
+    from . import voice
+    return voice.CREDIT
+
+
 @router.get("/settings")
 def settings_page(request: Request, saved: int = 0):
     page_user(request)
-    return render(request, "settings.html", {"saved": saved, "ranges": SETTING_RANGES, "errors": [], "palettes": PALETTES})
+    return render(request, "settings.html", {"saved": saved, "ranges": SETTING_RANGES, "errors": [], "palettes": PALETTES, "voice_credit": _voice_credit()})
 
 
 @router.post("/settings")
@@ -749,7 +800,7 @@ async def settings_save(request: Request):
         vals[flag] = 1 if form.get(flag) == "1" else 0
     vals["timezone"] = valid_tz(str(form.get("timezone", "UTC")))
     if errors:
-        return render(request, "settings.html", {"saved": 0, "ranges": SETTING_RANGES, "errors": errors, "palettes": PALETTES}, status=400)
+        return render(request, "settings.html", {"saved": 0, "ranges": SETTING_RANGES, "errors": errors, "palettes": PALETTES, "voice_credit": _voice_credit()}, status=400)
     with db.tx() as c:
         c.execute(update(db.settings).where(db.settings.c.user_id == u["id"]).values(**vals))
     return redirect("/settings?saved=1")

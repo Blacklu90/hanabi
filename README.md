@@ -83,6 +83,17 @@ The first run builds the kanji and dictionary database from KANJIDIC2, JMdict an
 
 GitHub Actions does this automatically. Every push runs the tests on Linux and Windows and builds the AppImage, the Windows installer, the portable zip and the Android APK. The APK is also started in an Android emulator and checked. Pushing a tag like `v1.0.0` publishes a release with everything attached.
 
+## Hear every word
+
+Every word has a ▶ button (and plays by itself when you reveal a card). Shuinkan uses, in this order:
+1. **Your own Anki decks' recordings.** Import a deck with audio (for example a 1.5k/2k core deck) and its native recordings are used for those words everywhere in the app.
+2. **The built-in offline voice** (Open JTalk, voice “Mei”). On Linux it's set up once by `--install`, `shuinkan-update` or Settings → Voice (about 130 MB download); the Windows app includes it.
+3. **Your phone's Japanese voice** on Android.
+
+## Practice as much as you like
+
+Decks → **練 Practice** (or `/practice`): pick 1–20 words — today's words, the next new ones, the ones you're learning, or random — and go through them as many times as you want. Practice never changes your review schedule.
+
 ## How it helps you study
 
 - **One next step:** the home screen shows one big "Your next step" button, so you can start right away.

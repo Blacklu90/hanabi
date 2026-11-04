@@ -1,11 +1,15 @@
 // Flashcard review (Anki-style): reveal, rate 1–4 (each button shows its next interval),
 // undo the last answer, bury/suspend, and edit your own notes. The server schedules everything.
 import { furigana, h, kanaNotes, kanaRows, kanjiRows } from './words-ui.js';
+import { say, sayButton, stop as stopSay } from './speak.js';
 import { $, $$, api, burstActive, reward, sparks, toast } from './app.js';
 
 const root = $('[data-review]');
 if (root) {
   const cards = JSON.parse($('#review-data').textContent);
+  const practice = root.dataset.practice === '1';
+  const practiceSet = cards.map(c => ({ ...c }));
+  let rounds = 0, firstTry = 0;
   const el = {
     card: $('[data-card]', root), front: $('[data-front]', root), back: $('[data-back]', root), answer: $('[data-answer]', root),
     reading: $('[data-reading]', root), extra: $('[data-extra]', root), track: $('[data-track]', root), link: $('[data-link]', root),
@@ -73,6 +77,7 @@ if (root) {
   }
 
   function render() {
+    stopSay();
     const c = cards[i];
     revealed = false;
     el.card.hidden = false;
@@ -113,6 +118,7 @@ if (root) {
     revealed = true;
     el.back.hidden = false; el.rate.hidden = false; el.showWrap.hidden = true;
     if (cards[i].anki) showFrame(cards[i].anki.back);
+    else if (cards[i].say && autoplay) say(cards[i].say.text, cards[i].say.reading);
     el.rate.querySelector('.good').focus({ preventScroll: true });
   }
 
@@ -124,6 +130,12 @@ if (root) {
   async function rate(r) {
     if (!revealed || busy || finished) return;
     const c = cards[i];
+    if (practice) {  // nothing is sent: practice never changes the schedule
+      if (r === 1) { again++; cards.push({ ...c, requeued: true }); }
+      else { done++; if (!c.requeued) firstTry++; }
+      advance();
+      return;
+    }
     // A card rated "Again" comes back once at the end for practice. The server
     // only schedules it again in 10 minutes, so this extra pass isn't sent.
     if (c.requeued) { advance(); return; }
@@ -218,6 +230,7 @@ if (root) {
   });
 
   function finish() {
+    if (practice) return finishPractice();
     finished = true;
     el.card.hidden = true; el.rate.hidden = true; el.showWrap.hidden = true;
     $('.shortcuts', root).hidden = true;
@@ -227,6 +240,30 @@ if (root) {
     $('[data-done-msg]', el.done).textContent = `${done} review${done === 1 ? '' : 's'} done${again ? `, ${again} to look at again soon` : ''}. Nice work.`;
     sparks();
   }
+
+  function finishPractice() {
+    finished = true;
+    rounds++;
+    el.card.hidden = true; el.rate.hidden = true; el.showWrap.hidden = true;
+    $('.shortcuts', root).hidden = true;
+    el.prog.style.width = '100%';
+    const n = practiceSet.length;
+    $('[data-done-msg]', el.done).textContent = `Round ${rounds}: ${firstTry} of ${n} right the first time${again ? `, ${again} repeat${again === 1 ? '' : 's'}` : ''}.`;
+    el.done.hidden = false;
+    $('[data-repeat]', el.done)?.focus();
+    if (rounds === 1) api('/api/practice/done', { n }).then(reward).catch(() => {});
+    if (firstTry === n) sparks();
+  }
+
+  function repeatPractice() {  // same words, new order
+    cards.length = 0;
+    const shuffled = practiceSet.map(c => ({ ...c, requeued: false })).sort(() => Math.random() - 0.5);
+    cards.push(...shuffled);
+    i = 0; done = 0; again = 0; firstTry = 0; finished = false;
+    el.done.hidden = true; $('.shortcuts', root).hidden = false;
+    render();
+  }
+  $('[data-repeat]', root)?.addEventListener('click', repeatPractice);
 
   el.show.addEventListener('click', reveal);
   el.card.addEventListener('click', (e) => { if (!e.target.closest('button,a,.menu')) reveal(); });
@@ -249,12 +286,16 @@ if (root) {
   document.addEventListener('keydown', (e) => {
     if (e.target.closest('input,textarea,select') || e.metaKey || e.ctrlKey || e.altKey || dlg.open) return;
     const k = e.key.toLowerCase();
+    if (practice && finished && e.key === 'Enter') { e.preventDefault(); repeatPractice(); return; }
+    if (practice && /^[1-4]$/.test(e.key)) { e.preventDefault(); rate(e.key === '1' ? 1 : 3); return; }
+    if (practice && (k === 'z' || e.key === '-' || e.key === '@')) return;
     if (k === 'z') { e.preventDefault(); undo(); return; }
     if (finished) return;
     if ((e.key === ' ' || e.key === 'Enter') && !revealed) { e.preventDefault(); reveal(); }
     else if (/^[1-4]$/.test(e.key)) { e.preventDefault(); rate(+e.key); }
     else if (k === 'e') { e.preventDefault(); act('edit'); }
     else if (k === 'r' && cards[i]?.anki) { e.preventDefault(); replay(); }
+    else if (k === 'r' && cards[i]?.say) { e.preventDefault(); say(cards[i].say.text, cards[i].say.reading); }
     else if (e.key === '-') { e.preventDefault(); act('bury'); }
     else if (e.key === '@') { e.preventDefault(); act('suspend'); }
   });
@@ -268,6 +309,7 @@ function showWordBack(c) {
   rows.replaceChildren(); sent.replaceChildren(); hint.textContent = '';
   let any = false;
   if (c.parts) { reading.replaceChildren(furigana(c.parts)); any = true; }
+  if (c.say) reading.append(sayButton(c.say.text, c.say.reading));
   if (c.kanji?.length) { rows.append(kanjiRows(c.kanji)); any = true; }
   if (c.kana_rows?.length) { const k = h('div', 'center'); k.append(kanaRows(c.kana_rows)); rows.append(k, kanaNotes(c.kana_rows)); any = true; }
   if (c.hint) { hint.textContent = c.hint; any = true; }
@@ -278,4 +320,13 @@ function showWordBack(c) {
   }
   if (c.sentence_jp) { sent.append(h('p', 'sentence-jp', c.sentence_jp), h('p', 'small muted', c.sentence_en || '')); any = true; }
   box.hidden = !any;
+}
+
+// Practice controls: slider shows its number; changing the deck or the kind of words reloads straight away.
+const pf = document.querySelector('[data-practice-form]');
+if (pf) {
+  const out = pf.querySelector('[data-pr-n-out]');
+  pf.n.addEventListener('input', () => { out.textContent = pf.n.value; });
+  pf.n.addEventListener('change', () => pf.requestSubmit());
+  for (const s of pf.querySelectorAll('select')) s.addEventListener('change', () => pf.requestSubmit());
 }

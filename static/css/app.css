@@ -628,3 +628,21 @@ footer a { color: var(--muted); }
 }
 .in-android body { overscroll-behavior: none; }
 .guess [data-g-rows].center { text-align: center; }
+
+/* ------------------------------------------------------------ ▶ hear it */
+.say { display: inline-grid; place-items: center; width: 2em; height: 2em; flex: none; border-radius: 50%; border: 0; cursor: pointer;
+  background: var(--accent-soft); color: var(--accent-ink, var(--accent)); font-size: .85rem; vertical-align: middle; margin-inline: 6px; padding: 0 0 0 2px; }
+.say:hover { background: var(--accent); color: #fff; }
+.say.playing { background: var(--accent); color: #fff; animation: say-pulse .6s ease-out; }
+.say.lg { width: 2.6em; height: 2.6em; font-size: 1rem; }
+@keyframes say-pulse { from { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 50%, transparent); } to { box-shadow: 0 0 0 10px transparent; } }
+@media (pointer: coarse) { .say { width: 2.6em; height: 2.6em; } }
+.row-say { display: inline-flex; align-items: center; gap: 2px; }
+
+/* ------------------------------------------------------------ practice */
+.practice-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; justify-content: center; margin: 0 auto 14px; max-width: 760px;
+  padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--radius-s); background: var(--surface); }
+.practice-bar select { width: auto; }
+.practice-bar input[type=range] { width: 140px; }
+.practice-rate { grid-template-columns: 1fr 1fr; }
+.sync-qr { display: grid; place-items: center; margin: 4px 0 6px; } .sync-qr img { width: min(240px, 70vw); height: auto; border-radius: 12px; background: #fff; padding: 6px; }

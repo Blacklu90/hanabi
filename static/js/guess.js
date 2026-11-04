@@ -1,6 +1,7 @@
 // Guess the reading of an unstudied word made of kanji you know. The server checks every answer.
 import { $, api, get, reward, toast } from './app.js';
 import { furigana, h, kanjiRows } from './words-ui.js';
+import { say, sayButton } from './speak.js';
 
 const root = $('[data-guess]');
 const el = {
@@ -57,7 +58,8 @@ el.form.addEventListener('submit', async (e) => {
     el.form.hidden = true; el.cluesBtn.hidden = true; el.skip.hidden = true; el.clues.hidden = true;
     el.verdict.textContent = r.correct ? 'Yes! You read it.' : `Not quite — you wrote ${r.guess}.`;
     el.verdict.className = 'g-verdict ' + (r.correct ? 'ok' : 'no');
-    el.furi.replaceChildren(furigana(r.parts));
+    el.furi.replaceChildren(furigana(r.parts), sayButton(r.word, r.reading));
+    say(r.word, r.reading);
     el.rows.replaceChildren(kanjiRows(r.kanji));
     el.hint.textContent = r.hint || '';
     el.sentence.replaceChildren();

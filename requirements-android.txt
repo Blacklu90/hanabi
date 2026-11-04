@@ -6,3 +6,4 @@ SQLAlchemy
 Jinja2
 python-multipart
 tzdata
+segno

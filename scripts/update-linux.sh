@@ -38,6 +38,7 @@ if [ -x "$APP" ]; then
 fi
 if [ "$current" = "$latest" ] && [ $FORCE = 0 ]; then
   say "Shuinkan $current is already the newest version. ✓"
+  run_app --install-voice 2>/dev/null | grep -v "already installed" || true  # make sure the voice is there
   exit 0
 fi
 say "Updating Shuinkan ${current:-(not installed yet)} → $latest"
@@ -66,7 +67,8 @@ done
 
 mv -f "$tmp" "$APP"
 trap - EXIT
-run_app --install >/dev/null 2>&1 || true   # menu entry + icon point to the new file
+# Menu entry + icon point to the new file; also sets up the built-in Japanese voice the first time (kept across updates).
+run_app --install || echo "(The voice can be installed later from Settings → Voice.)"
 
 say "Done! Shuinkan $latest is installed. ✓"
 echo "Start it from your app menu, or run: $APP"

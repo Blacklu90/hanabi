@@ -5,7 +5,7 @@
 
 {% macro kana_word_row(w, script, add=False) -%}
 <div class="word-row kana-row">
-  <div class="wr-main"><span class="furi" lang="ja">{{ w.word }}</span><span class="small"><b>{{ w.romaji }}</b> — {{ w.meaning }}</span>{% if w.written %}<span class="tiny muted">Usually written <span lang="ja">{{ w.written }}</span></span>{% endif %}</div>
+  <div class="wr-main"><span class="row-say"><span class="furi" lang="ja">{{ w.word }}</span><button class="say" type="button" data-say="{{ w.word }}" aria-label="Hear {{ w.word }}" title="Hear it">▶</button></span><span class="small"><b>{{ w.romaji }}</b> — {{ w.meaning }}</span>{% if w.written %}<span class="tiny muted">Usually written <span lang="ja">{{ w.written }}</span></span>{% endif %}</div>
   <div>{{ kana_rows(w.rows) }}{% for r in w.rows if r.note %}<div class="tiny muted"><span lang="ja">{{ r.kana }}</span>: {{ r.note }}</div>{% endfor %}</div>
   {% if add %}<div class="wr-add">{% if w.added %}<span class="pill good">In your deck</span>{% else %}<button class="btn sm" type="button" data-add-word="{{ w.id }}" data-add-url="/api/kana/{{ script }}/words/add">+ Study</button>{% endif %}</div>{% endif %}
 </div>

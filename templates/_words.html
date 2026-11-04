@@ -17,7 +17,7 @@
 
 {% macro word_row(w, highlight='', add=False) -%}
 <div class="word-row">
-  <div class="wr-main">{{ furi(w.parts) }}<span class="small">{{ w.meaning }}</span></div>
+  <div class="wr-main"><span class="row-say">{{ furi(w.parts) }}<button class="say" type="button" data-say="{{ w.word }}" data-reading="{{ w.reading }}" aria-label="Hear {{ w.word }}" title="Hear it">▶</button></span><span class="small">{{ w.meaning }}</span></div>
   {{ kanji_rows(w.kanji, highlight) }}
   {% if w.hint and w.hint.text %}<p class="tiny muted wr-hint">{{ w.hint.text }}</p>{% endif %}
   {% if add %}<div class="wr-add">{% if w.added %}<span class="pill good">In your deck</span>{% else %}<button class="btn sm" type="button" data-add-word="{{ w.id }}">+ Study this word</button>{% endif %}</div>{% endif %}

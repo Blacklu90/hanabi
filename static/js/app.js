@@ -165,3 +165,11 @@ if (android) {
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncBars);
   new MutationObserver(syncBars).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-palette'] });
 }
+
+// ▶ buttons (data-say) work on every page; the voice code loads the first time one is used.
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('[data-say]') || window.__sayLoaded) return;
+  window.__sayLoaded = true;
+  e.preventDefault();
+  import('./speak.js').then(() => e.target.closest('[data-say]').click());
+}, true);

@@ -1,6 +1,7 @@
 // Read it: read an unstudied kana word made of kana you know. The server checks every answer.
 import { $, api, get, reward, toast } from './app.js';
 import { h, kanaNotes, kanaRows } from './words-ui.js';
+import { say, sayButton } from './speak.js';
 
 const root = $('[data-read]');
 const script = root.dataset.script;
@@ -44,7 +45,8 @@ el.form.addEventListener('submit', async (e) => {
     el.romaji.textContent = r.romaji;
     el.meaning.textContent = r.meaning;
     el.written.textContent = r.written ? `Usually written ${r.written}` : '';
-    el.rows.replaceChildren(kanaRows(r.rows));
+    el.rows.replaceChildren(kanaRows(r.rows), sayButton(r.word));
+    say(r.word);
     el.notes.replaceChildren(kanaNotes(r.rows));
     el.hint.textContent = r.hint || '';
     el.sentence.replaceChildren();

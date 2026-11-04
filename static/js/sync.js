@@ -1,5 +1,5 @@
 // Wi-Fi sync page: host (show a code, wait) or join (type address + code).
-import { $, api, get, toast } from './app.js';
+import { $, android, api, get, toast } from './app.js';
 
 const host = $('[data-host]'), join = $('[data-join]');
 const q = (s, r = host) => $(s, r);
@@ -26,6 +26,8 @@ function render(st) {
   q('[data-host-off]').hidden = on;
   q('[data-host-on]').hidden = !on;
   if (on) {
+    const img = q('[data-qr]');
+    if (img.dataset.forCode !== st.code) { img.dataset.forCode = st.code; img.src = `/api/sync/qr.svg?c=${encodeURIComponent(st.code)}`; }
     q('[data-code]').textContent = st.code;
     q('[data-addr]').textContent = st.addresses.map((a) => `${a}:${st.port}`).join('  or  ');
     const m = Math.floor(st.expires_in / 60), s = String(st.expires_in % 60).padStart(2, '0');
@@ -62,6 +64,23 @@ q('[data-host-stop]').addEventListener('click', async () => {
   render({ state: 'off' });
 });
 
+// A scanned QR code (or a shuinkan://sync link) carries the addresses and the code: fill them in and sync.
+function fromLink(text) {
+  try {
+    const u = new URL(String(text).trim().replace(/^shuinkan:\/\//, 'https://shuinkan/'));
+    const a = u.searchParams.get('a'), c = u.searchParams.get('c');
+    if (!a || !c) throw new Error();
+    join.address.value = a; join.code.value = c;
+    join.requestSubmit();
+  } catch { toast('That QR code isn\'t a Shuinkan sync code.', 'err'); }
+}
+window.onShuinkanScan = fromLink;
+const scan = $('[data-scan]', join);
+if (android && android.scanQr) {
+  scan.hidden = false;
+  scan.addEventListener('click', () => { try { android.scanQr(); } catch { toast('Scanning isn\'t available. Type the code instead.', 'err'); } });
+}
+
 join.addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = $('button[type=submit]', join), box = $('[data-join-result]', join);
@@ -76,3 +95,10 @@ join.addEventListener('submit', async (e) => {
 try { const a = localStorage.getItem('sync-addr'); if (a) join.address.value = a; } catch { /* private mode */ }
 
 get('/api/sync/host').then((st) => { if (st.state === 'waiting' || st.state === 'syncing') { render(st); poll(); } }).catch(() => {});
+
+// Opened from a scanned link (shuinkan://sync?a=…&c=…): sync straight away.
+const params = new URLSearchParams(location.search);
+if (params.get('a') && params.get('c')) {
+  history.replaceState(null, '', '/sync');
+  fromLink(`shuinkan://sync?a=${params.get('a')}&c=${params.get('c')}`);
+}

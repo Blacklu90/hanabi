@@ -32,7 +32,7 @@ import time
 import urllib.request
 from pathlib import Path
 
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 WINDOWS = os.name == "nt"
 FROZEN = getattr(sys, "frozen", False)  # running from the packaged Windows .exe (PyInstaller)
 APP_ROOT = Path(getattr(sys, "_MEIPASS", "")) if FROZEN else Path(__file__).resolve().parent.parent
@@ -277,6 +277,31 @@ def install() -> int:
     return 0
 
 
+def install_voice() -> int:
+    """Put the built-in voice into the data folder (the Windows build already includes it)."""
+    os.environ.setdefault("SHUINKAN_DB", str(DATA_HOME / "data" / "shuinkan.db"))
+    os.environ.setdefault("SHUINKAN_CONTENT_DB", str(APP_ROOT / "data" / "content.db"))
+    if not FROZEN:
+        sys.path.insert(0, str(APP_ROOT))
+    DATA_HOME.joinpath("data").mkdir(parents=True, exist_ok=True)
+    from app import voice
+    print("Setting up the Japanese voice (one time)…")
+    return 0 if voice.install(progress=print) else 1
+
+
+def check_voice() -> int:
+    os.environ.setdefault("SHUINKAN_DB", str(DATA_HOME / "data" / "shuinkan.db"))
+    os.environ.setdefault("SHUINKAN_CONTENT_DB", str(APP_ROOT / "data" / "content.db"))
+    if not FROZEN:
+        sys.path.insert(0, str(APP_ROOT))
+    DATA_HOME.joinpath("data").mkdir(parents=True, exist_ok=True)
+    from app import voice
+    data = voice.synth("がっこう") if voice.available() else None
+    ok = bool(data and data[:4] == b"RIFF" and len(data) > 10000)
+    print("voice ok" if ok else "voice missing")
+    return 0 if ok else 1
+
+
 def uninstall() -> int:
     if WINDOWS:
         print("On Windows, uninstall Shuinkan from Settings → Apps. Your progress stays in", DATA_HOME)
@@ -299,10 +324,19 @@ def main(argv=None) -> int:
     ap.add_argument("--install", action="store_true", help="add Shuinkan to your app menu")
     ap.add_argument("--uninstall", action="store_true", help="remove Shuinkan from your app menu (keeps your progress)")
     ap.add_argument("--stop", action="store_true", help="stop a running Shuinkan")
+    ap.add_argument("--install-voice", action="store_true", help="download the built-in Japanese voice (about 130 MB, once)")
+    ap.add_argument("--check-voice", action="store_true", help=argparse.SUPPRESS)  # CI: exit 0 if the built-in voice speaks
     ap.add_argument("--version", action="version", version=f"Shuinkan {VERSION}")
     a = ap.parse_args(argv)
+    if a.install_voice:
+        return install_voice()
+    if a.check_voice:
+        return check_voice()
     if a.install:
-        return install()
+        code = install()
+        if code == 0 and not WINDOWS:
+            install_voice()  # set up the voice now, so ▶ works right away
+        return code
     if a.uninstall:
         return uninstall()
     if a.stop:

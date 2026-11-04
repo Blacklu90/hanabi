@@ -1034,6 +1034,15 @@ def sync_host_status(u=Depends(require_user)):
     return ok(**(st or {"state": "off"}))
 
 
+@router.get("/sync/qr.svg")
+def sync_qr(u=Depends(require_user)):
+    from . import sync
+    svg = sync.qr_svg(u["id"])
+    if svg is None:
+        return err("No sync code is showing.", 404)
+    return Response(svg, media_type="image/svg+xml", headers={"Cache-Control": "no-store"})
+
+
 @router.post("/sync/host/stop", dependencies=W)
 def sync_host_stop(u=Depends(require_user)):
     from . import sync
@@ -1042,7 +1051,7 @@ def sync_host_stop(u=Depends(require_user)):
 
 
 class JoinIn(BaseModel):
-    address: str = Field(max_length=120)
+    address: str = Field(max_length=300)
     code: str = Field(max_length=40)
 
 
@@ -1056,3 +1065,64 @@ def sync_join(body: JoinIn, u=Depends(require_user)):
     except sync.SyncError as e:
         return err(str(e), 400)
     return ok(**r)
+
+
+# ------------------------------------------------------------- pronunciation
+@router.get("/say")
+def say(text: str = "", reading: str = "", u=Depends(require_user)):
+    """Where to get the sound of a word: your decks' recording, the built-in voice, or the device's voice."""
+    from urllib.parse import quote
+
+    from . import voice
+    text, reading = text.strip()[:60], reading.strip()[:60]
+    if not text:
+        return err("Nothing to say.")
+    with db.ro() as c:
+        hit = voice.deck_audio(c, u["id"], text, reading)
+    if hit:
+        deck_id, name = hit
+        return ok(source="deck", url=f"/anki-media/{deck_id}/{quote(name)}")
+    spoken = reading or text  # the reading avoids guessing which reading a kanji word has
+    if voice.available():
+        return ok(source="builtin", url=f"/api/say.wav?text={quote(spoken)}")
+    return ok(source="device", text=spoken, can_install=voice.can_install())
+
+
+@router.get("/say.wav")
+def say_wav(text: str = "", u=Depends(require_user)):
+    from . import voice
+    data = voice.synth(text)
+    if data is None:
+        return err("The built-in voice isn't installed.", 404)
+    return Response(data, media_type="audio/wav", headers={"Cache-Control": "private, max-age=2592000"})
+
+
+@router.get("/voice")
+def voice_status(u=Depends(require_user)):
+    from . import voice
+    return ok(**voice.install_status())
+
+
+@router.post("/voice/install", dependencies=W)
+def voice_install(u=Depends(require_user)):
+    from . import voice
+    if not voice.can_install():
+        return err("The built-in voice can't be installed on this device.")
+    return ok(**voice.install_in_background())
+
+
+# ------------------------------------------------------------------ practice
+class PracticeDoneIn(BaseModel):
+    n: int = Field(5, ge=1, le=20)
+
+
+@router.post("/practice/done", dependencies=W)
+def practice_done(body: PracticeDoneIn, u=Depends(require_user)):
+    """A finished practice round. A little XP for the first round of the day; practice never changes the schedule."""
+    with db.tx() as c:
+        day = gamify.local_day(u["timezone"])
+        xp = gamify.award(c, u["id"], "game", f"practice:{day}", 3, u["timezone"])
+        if xp:
+            gamify.log(c, u["id"], "srs", f"Practised {body.n} word{'s' if body.n != 1 else ''}")
+        tail = finish_up(c, u)
+    return ok(xp=xp, **tail)

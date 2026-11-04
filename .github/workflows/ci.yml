@@ -78,11 +78,16 @@ jobs:
           name: content-db
           path: data
       - name: Install
-        run: python -m pip install -r requirements.txt -r requirements-dev.txt pyinstaller pillow
+        run: python -m pip install -r requirements.txt -r requirements-dev.txt -r requirements-voice.txt pyinstaller pillow
       - name: Tests (on Windows)
         run: python -m pytest -q
       - name: Build Shuinkan.exe
         run: pyinstaller packaging/windows/shuinkan.spec --noconfirm
+      - name: Check the built-in voice is in the build
+        run: |
+          $p = Start-Process -FilePath dist\Shuinkan\Shuinkan.exe -ArgumentList "--check-voice" -Wait -PassThru
+          Get-Content "$env:LOCALAPPDATA\Shuinkan\shuinkan.log" -ErrorAction SilentlyContinue | Select-Object -Last 20
+          if ($p.ExitCode -ne 0) { throw "The Windows build can't speak (exit $($p.ExitCode))" }
       - name: Smoke test (start, load a page, stop)
         run: |
           $env:LOCALAPPDATA = "$env:RUNNER_TEMP\appdata"

@@ -35,3 +35,21 @@ import('./app.js').then(({ android }) => {
   time.addEventListener('change', () => { if (on.checked) save(); });
   window.addEventListener('reminderchange', load);
 });
+
+// Voice: show whether the built-in voice is installed; install it with one click (Linux/macOS).
+import('./app.js').then(({ api, get, android }) => {
+  const card = document.querySelector('[data-voice-card]');
+  if (!card) return;
+  const st = card.querySelector('[data-voice-state]'), btn = card.querySelector('[data-voice-install]');
+  let timer = null;
+  const show = (r) => {
+    if (r.installed) { st.textContent = 'The built-in voice is installed. ✓'; btn.hidden = true; return; }
+    if (r.state === 'working') { st.textContent = r.message || 'Installing…'; btn.hidden = true; return; }
+    if (android) { st.textContent = 'On your phone, Shuinkan uses the phone\'s own Japanese voice.'; btn.hidden = true; return; }
+    st.textContent = r.state === 'error' ? r.message : (r.can_install ? 'The built-in voice isn\'t installed yet.' : 'The built-in voice isn\'t available on this device.');
+    btn.hidden = !r.can_install;
+  };
+  const poll = () => { clearInterval(timer); timer = setInterval(async () => { const r = await get('/api/voice'); show(r); if (r.state !== 'working') clearInterval(timer); }, 1500); };
+  get('/api/voice').then((r) => { show(r); if (r.state === 'working') poll(); }).catch(() => { st.textContent = ''; });
+  btn.addEventListener('click', async () => { btn.disabled = true; try { show(await api('/api/voice/install', {})); poll(); } catch (e) { st.textContent = e.message; } btn.disabled = false; });
+});
