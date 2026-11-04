@@ -73,4 +73,5 @@ dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.webkit:webkit:1.12.1")
     implementation("com.google.android.gms:play-services-code-scanner:16.1.0")  // QR codes for Wi-Fi sync
+    implementation("androidx.fragment:fragment-ktx:1.8.5")  // the scanner brings an old Fragment; ActivityResult needs 1.3+
 }
